@@ -178,11 +178,64 @@ const createPlan = async (req, res) => {
 
 // Route 10: GET /user/:id/plan
 // Get all plans for a user
-const getPlans = async (req, res) => {};
+// TODO: hard to separate as source and destination because there are multiple flights
+const getPlans = async (req, res) => {
+    try {
+        const {id: email} = req.params;
+        if (!email) {
+            return res.status(400).json({error: "Email is required."});
+        }
+
+        const query = `
+        SELECT  tp.plan_id, tp.total_cost, tp.created_at AS plan_date, 
+       ARRAY_AGG(DISTINCT f.origin_airport_city) || ARRAY_AGG(DISTINCT f.destination_airport_city) AS cities
+        FROM TravelPlan tp
+        JOIN FlightTravelPlan ftp ON tp.plan_id = ftp.plan_id
+        JOIN Flight f ON ftp.flight_id = f.flight_id
+        WHERE tp.user_email = $1
+        GROUP BY tp.plan_id
+        ORDER BY tp.created_at DESC;`;
+
+        const {rows: plans} = await connection.query(query, [email]);
+        res.status(200).json({plans});
+    } catch (error) {
+        console.error('Error in getPlan:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 11: GET /user/:id/plan/:planId
 // Get a plan by id for a user
-const getPlan = async (req, res) => {};
+const getPlan = async (req, res) => {
+    try {
+        const {id: email, planId} = req.params;
+        if (!email || !planId) {
+            return res.status(400).json({error: "Email and planId are required."});
+        }
+
+        const query = `
+        SELECT 
+        tp.plan_id, 
+        tp.total_cost, 
+        tp.created_at AS plan_date,
+        ARRAY_AGG(DISTINCT f.origin_airport_city) || ARRAY_AGG(DISTINCT f.destination_airport_city) AS cities,
+        COALESCE(JSON_AGG(DISTINCT f.*) FILTER (WHERE f.flight_id IS NOT NULL), '[]') AS flights,
+        COALESCE(JSON_AGG(DISTINCT h.*) FILTER (WHERE h.hotel_id IS NOT NULL), '[]') AS hotels
+        FROM TravelPlan tp
+        JOIN FlightTravelPlan ftp ON tp.plan_id = ftp.plan_id
+        JOIN Flight f ON ftp.flight_id = f.flight_id
+        JOIN HotelTravelPlan htp ON tp.plan_id = htp.plan_id
+        JOIN Hotel h ON htp.hotel_id = h.hotel_id
+        WHERE tp.user_email = $1 AND tp.plan_id = $2
+        GROUP BY tp.plan_id;`
+
+        const {rows: plans} = await connection.query(query, [email, planId]);
+        res.status(200).json({plan: plans});
+    } catch (error) {
+        console.error('Error in getPlan:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+}
+}
 
 // Route 12: PUT /user/:id/plan/:planId
 // Update a plan by id for a user
@@ -190,7 +243,49 @@ const updatePlan = async (req, res) => {};
 
 // Route 13: DELETE /user/:id/plan/:planId
 // Delete a plan by id for a user
-const deletePlan = async (req, res) => {};
+const deletePlan = async (req, res) => {
+    const client = await connection.connect();
+    try {
+        const {id: email, planId} = req.params;
+        if (!email || !planId) {
+            return res.status(400).json({error: "Email and planId are required."});
+        }
+
+        // Start transaction
+        await client.query("BEGIN");
+
+        // Delete FlightTravelPlan
+        await client.query(`
+        DELETE FROM FlightTravelPlan
+        WHERE plan_id = $1`, [planId]);
+
+        // Delete HotelTravelPlan
+        await client.query(`
+        DELETE FROM HotelTravelPlan
+        WHERE plan_id = $1`, [planId]);
+
+        // Delete TravelPlan
+        const {rows: deletedPlan} = await client.query(`
+        DELETE FROM TravelPlan
+        WHERE user_email = $1 AND plan_id = $2
+        RETURNING *`, [email, planId]);
+
+        if (deletedPlan.length === 0) {
+            return res.status(404).json({error: "Plan not found"});
+        }
+
+        // Commit transaction
+        await client.query("COMMIT");
+        res.status(204).json({message: "Plan deleted successfully", deletedPlan});
+    } catch (error) {
+        // Rollback transaction
+        await client.query("ROLLBACK");
+        console.error('Error in deletePlan:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    } finally {
+        client.release();
+    }
+};
 
 module.exports = {
   getFlights,
