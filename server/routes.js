@@ -30,13 +30,13 @@ const getFlights = async (req, res) => {
     const query = `
     SELECT *
     FROM Flight
-    WHERE origin_airport_city LIKE ? AND destination_airport_city LIKE ?`
+    WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2`
 
     console.log(query);
     console.log(connection.user)
     console.log(connection.password)
 
-    const [flights] = await connection.query(query, [`${source}%`, `${destination}%`]);
+    const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`]);
 
     if (flights.length === 0) {
       return res.status(404).json({error: "No flights found"});
