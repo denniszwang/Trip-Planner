@@ -24,7 +24,8 @@ app.get("/user/:id/plan/:planId", routes.getPlan);
 app.put("/user/:id/plan/:planId", routes.updatePlan);
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
 
-app.listen(config.port, () => {
+
+app.listen(config.server_port, () => {
   console.log(
     `Server is running on port http://${config.server_host}:${config.server_port}/`
   );

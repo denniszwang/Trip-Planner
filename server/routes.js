@@ -7,7 +7,7 @@ types.setTypeParser(20, (val) => parseInt(val, 10));
 const connection = new Pool({
   user: config.rds_user,
   host: config.rds_host,
-  database: config.rds_name,
+  database: config.rds_db,
   password: config.rds_password,
   port: config.rds_port,
   ssl: {
@@ -15,9 +15,39 @@ const connection = new Pool({
   },
 });
 
+connection.connect((err) => err && console.log(err))
+
 // Route 1: GET /flight/:source/:destination
 // Get all flights from source to destination
-const getFlights = async (req, res) => {};
+const getFlights = async (req, res) => {
+  try {
+    const source = req.params.source;
+    const destination = req.params.destination;
+    if (!source || !destination) {
+      return res.status(400).json({error: "Invalid source or destination"});
+    }
+
+    const query = `
+    SELECT *
+    FROM Flight
+    WHERE origin_airport_city LIKE ? AND destination_airport_city LIKE ?`
+
+    console.log(query);
+    console.log(connection.user)
+    console.log(connection.password)
+
+    const [flights] = await connection.query(query, [`${source}%`, `${destination}%`]);
+
+    if (flights.length === 0) {
+      return res.status(404).json({error: "No flights found"});
+    }
+
+    res.status(200).json(flights);
+  } catch (error) {
+    console.error('Error in getFlights:', error);
+    res.status(500).json({error: "Internal server error!!!"});
+  }
+};
 
 // Route 2: GET /flight/:source/:destination/popular
 // Get popular flights from source to destination
