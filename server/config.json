@@ -3,7 +3,7 @@
   "rds_port": "5432",
   "rds_user": "team24",
   "rds_password": "5nrrFzXjtzTfIAgkPnEa",
-  "rds_db": "database-550project",
+  "rds_db": "postgres",
   "server_host": "localhost",
   "server_port": "8080"
 }
