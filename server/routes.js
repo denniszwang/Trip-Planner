@@ -30,13 +30,9 @@ const getFlights = async (req, res) => {
     const query = `
     SELECT *
     FROM Flight
-    WHERE origin_airport_city LIKE ? AND destination_airport_city LIKE ?`
+    WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2`;
 
-    console.log(query);
-    console.log(connection.user)
-    console.log(connection.password)
-
-    const [flights] = await connection.query(query, [`${source}%`, `${destination}%`]);
+    const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`]);
 
     if (flights.length === 0) {
       return res.status(404).json({error: "No flights found"});
@@ -71,11 +67,57 @@ const getAverageHotels = async (req, res) => {};
 
 // Route 7: GET /user/:id
 // Get user by id
-const getUser = async (req, res) => {};
+const getUser = async (req, res) => {
+  try {
+    const {id: email} = req.params;
+    if (!email) {
+      return res.status(400).json({error: "Email is required."});
+    }
+
+    const query =  `
+    SELECT * 
+    FROM Users
+    WHERE email = $1`;
+
+    const {rows:user} = await connection.query(query, [email]);
+    if (user.length === 0) {
+        return res.status(404).json({error: "User not found."});
+    }
+
+    res.status(200).json(user[0]);
+  } catch (error) {
+    console.error('Error in getUser:', error);
+    res.status(500).json({error: "Internal server error!!!"});
+  }
+};
 
 // Route 8: POST /user
 // Create a new user
-const createUser = async (req, res) => {};
+const createUser = async (req, res) => {
+    try {
+        const {name, email, password} = req.body;
+        console.log(name)
+        console.log(email)
+        console.log(password)
+        if (!name || !email || !password) {
+        return res.status(400).json({error: "All fields are required to register a user!!!"});
+        }
+
+        const query = `
+        INSERT INTO Users (name, email, password)
+        VALUES ($1, $2, $3)`;
+
+        await connection.query(query, [name, email, password]);
+
+        res.status(201).json({message: "User created successfully"});
+    } catch (error) {
+        console.error('Error in createUser:', error);
+        if (error.code === '23505') {
+          return res.status(409).json({error: "User email already exists"});
+        }
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 9: POST /user/:id/plan
 // Create a new plan for a user

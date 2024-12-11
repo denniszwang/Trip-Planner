@@ -10,6 +10,8 @@ app.use(
   })
 );
 
+app.use(express.json())
+
 app.get("/flight/:source/:destination", routes.getFlights);
 app.get("/flight/:source/:destination/popular", routes.getPopularFlights);
 app.get("/flight/:source/:destination/average", routes.getAverageFlights);
