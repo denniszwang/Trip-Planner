@@ -15,7 +15,7 @@ const connection = new Pool({
   },
 });
 
-connection.connect((err) => err && console.log(err))
+// connection.connect((err) => err && console.log(err))
 
 // Route 1: GET /flight/:source/:destination
 // Get all flights from source to destination
@@ -121,7 +121,60 @@ const createUser = async (req, res) => {
 
 // Route 9: POST /user/:id/plan
 // Create a new plan for a user
-const createPlan = async (req, res) => {};
+const createPlan = async (req, res) => {
+    const client = await connection.connect();
+    try {
+        const {id: email} = req.params;
+        const {total_cost, hotels, flights} = req.body;
+
+        if (!email || !total_cost || !hotels || !flights) {
+            return res.status(400).json({error: "Missing required fields"});
+        }
+
+        // Start transaction
+        await client.query("BEGIN");
+
+        // Update TravelPlan
+        const insertPlanQuery = `
+        INSERT INTO TravelPlan (total_cost, user_email)
+            VALUES ($1, $2)
+            RETURNING plan_id`;
+
+        const {rows: plan} = await client.query(insertPlanQuery, [total_cost, email]);
+        const planId = plan[0].plan_id;
+
+        // Update HotelTravelPlan
+        if (hotels && hotels.length > 0) {
+            const insertHotelQuery = `
+            INSERT INTO HotelTravelPlan (plan_id, hotel_id)
+            VALUES ($1, $2)`;
+            for (const hotelId of hotels) {
+                await client.query(insertHotelQuery, [planId, hotelId]);
+            }
+        }
+
+        // Update FlightTravelPlan
+        if (flights && flights.length > 0) {
+            const insertFlightQuery = `
+            INSERT INTO FlightTravelPlan (plan_id, flight_id)
+            VALUES ($1, $2)`;
+            for (const flightId of flights) {
+                await client.query(insertFlightQuery, [planId, flightId]);
+            }
+        }
+
+        // Commit transaction
+        await client.query("COMMIT");
+        res.status(201).json({message: "Plan created successfully", planId});
+    } catch (error) {
+        // Rollback transaction
+        await client.query("ROLLBACK");
+        console.error('Error in createPlan:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    } finally {
+        client.release();
+    }
+};
 
 // Route 10: GET /user/:id/plan
 // Get all plans for a user
