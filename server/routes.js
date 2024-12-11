@@ -1,3 +1,6 @@
+// Complex Queries: 10, 11
+
+
 const config = require("./config");
 const { v4: uuid } = require("uuid").v4;
 const { Pool, types } = require("pg");
@@ -14,8 +17,6 @@ const connection = new Pool({
     rejectUnauthorized: false,
   },
 });
-
-// connection.connect((err) => err && console.log(err))
 
 // Route 1: GET /flight/:source/:destination
 // Get all flights from source to destination
@@ -47,23 +48,148 @@ const getFlights = async (req, res) => {
 
 // Route 2: GET /flight/:source/:destination/popular
 // Get popular flights from source to destination
-const getPopularFlights = async (req, res) => {};
+const getPopularFlights = async (req, res) => {
+    try {
+        const {source, destination} = req.params;
+        if (!source || !destination) {
+            return res.status(400).json({error: "Invalid source or destination"});
+        }
+
+        // return 5 for now, might need pagination
+        const query = `
+        SELECT f.*, COUNT(ftp.plan_id) AS saved_count
+        FROM Flight f
+        JOIN FlightTravelPlan ftp ON f.flight_id = ftp.flight_id
+        WHERE f.origin_airport_city LIKE $1 AND f.destination_airport_city LIKE $2
+        GROUP BY f.flight_id
+        ORDER BY saved_count DESC
+        LIMIT 5;`;
+
+        const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`]);
+
+        if (flights.length === 0) {
+            return res.status(404).json({error: "No flights found"});
+        }
+
+        res.status(200).json(flights);
+    } catch (error) {
+        console.error('Error in getPopularFlights:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 3: GET /flight/:source/:destination/average
-// Get average flights from source to destination
-const getAverageFlights = async (req, res) => {};
+// Get average price of flights from source to destination
+const getAverageFlights = async (req, res) => {
+    try {
+        const { source, destination } = req.params;
+
+        if (!source || !destination) {
+            return res.status(400).json({ error: "Invalid source or destination" });
+        }
+
+        const query = `
+        SELECT AVG(f.fare) AS average_price
+        FROM Flight f
+        WHERE f.origin_airport_city LIKE $1 AND f.destination_airport_city LIKE $2;`;
+
+        const { rows } = await connection.query(query, [`${source}%`, `${destination}%`]);
+
+        if (rows.length === 0 || rows[0].average_price === null) {
+            return res.status(404).json({ error: "No flights found" });
+        }
+
+        res.status(200).json({ average_price: rows[0].average_price });
+    } catch (error) {
+        console.error('Error in getAverageFlights:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 4: GET /hotel/:city
 // Get hotels in a city
-const getHotels = async (req, res) => {};
+const getHotels = async (req, res) => {
+    try {
+        const {city} = req.params;
+        if (!city) {
+            return res.status(400).json({error: "City is required."});
+        }
+
+        const query = `
+        SELECT *
+        FROM Hotel
+        WHERE city = $1
+        ORDER BY hotel_rating DESC;`;
+
+        const {rows: hotels} = await connection.query(query, [city]);
+        if (hotels.length === 0) {
+            return res.status(404).json({error: "No hotels found."});
+        }
+
+        res.status(200).json(hotels);
+    } catch (error) {
+        console.error('Error in getHotels:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 5: GET /hotel/:city/popular
 // Get popular hotels in a city
-const getPopularHotels = async (req, res) => {};
+const getPopularHotels = async (req, res) => {
+    try {
+        const {city} = req.params;
+        if (!city) {
+            return res.status(400).json({error: "City is required."});
+        }
+
+        // return 5 for now, might need pagination
+        const query = `
+        SELECT h.hotel_id, COUNT(htp.plan_id) AS saved_count
+        FROM Hotel h
+        JOIN HotelTravelPlan htp ON h.hotel_id = htp.hotel_id
+        WHERE h.city = $1
+        GROUP BY h.hotel_id
+        ORDER BY saved_count DESC
+        LIMIT 5;`;
+
+        const {rows: hotels} = await connection.query(query, [city]);
+
+        if (hotels.length === 0) {
+            return res.status(404).json({error: "No hotels found."});
+        }
+
+        res.status(200).json(hotels);
+    } catch (error) {
+        console.error('Error in getPopularHotels:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 6: GET /hotel/:city/average
-// Get average hotels in a city
-const getAverageHotels = async (req, res) => {};
+// Get average rating hotels in a city
+const getAverageHotels = async (req, res) => {
+    try {
+        const {city} = req.params;
+        if (!city) {
+            return res.status(400).json({error: "City is required."});
+        }
+
+        const query = `
+        SELECT AVG(hotel_rating) AS average_rating
+        FROM Hotel
+        WHERE city = $1;`;
+
+        const {rows} = await connection.query(query, [city]);
+        if (rows.length === 0 || rows[0].average_rating === null) {
+            return res.status(404).json({error: "No hotels found."});
+        }
+
+        res.status(200).json({average_rating: rows[0].average_rating});
+    } catch (error) {
+        console.error('Error in getAverageHotels:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
+};
 
 // Route 7: GET /user/:id
 // Get user by id
@@ -96,9 +222,7 @@ const getUser = async (req, res) => {
 const createUser = async (req, res) => {
     try {
         const {name, email, password} = req.body;
-        console.log(name)
-        console.log(email)
-        console.log(password)
+
         if (!name || !email || !password) {
         return res.status(400).json({error: "All fields are required to register a user!!!"});
         }
@@ -178,7 +302,7 @@ const createPlan = async (req, res) => {
 
 // Route 10: GET /user/:id/plan
 // Get all plans for a user
-// TODO: hard to separate as source and destination because there are multiple flights
+// Note: hard to separate as source and destination because there are multiple flights
 const getPlans = async (req, res) => {
     try {
         const {id: email} = req.params;
@@ -238,7 +362,7 @@ const getPlan = async (req, res) => {
 }
 
 // Route 12: PUT /user/:id/plan/:planId
-// Update a plan by id for a user
+// TODO: Update a plan by id for a user
 const updatePlan = async (req, res) => {};
 
 // Route 13: DELETE /user/:id/plan/:planId
