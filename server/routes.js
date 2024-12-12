@@ -28,18 +28,33 @@ const getFlights = async (req, res) => {
       return res.status(400).json({error: "Invalid source or destination"});
     }
 
+    // Pagination
+    let {page = 1, limit = 5} = req.query;
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+        return res.status(400).json({error: "Invalid page or limit"});
+    }
+    const offset = (page - 1) * limit;
+
     const query = `
     SELECT *
     FROM Flight
-    WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2`;
+    WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2
+       LIMIT $3 OFFSET $4;`;
 
-    const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`]);
+    const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`, limit, offset]);
 
     if (flights.length === 0) {
       return res.status(404).json({error: "No flights found"});
     }
 
-    res.status(200).json(flights);
+    res.status(200).json({
+        currentPage: page,
+        pageSize: limit,
+        totalFlights: flights.length,
+        flights,
+    });
   } catch (error) {
     console.error('Error in getFlights:', error);
     res.status(500).json({error: "Internal server error!!!"});
@@ -55,23 +70,37 @@ const getPopularFlights = async (req, res) => {
             return res.status(400).json({error: "Invalid source or destination"});
         }
 
+        // Pagination
+        let {page = 1, limit = 5} = req.query;
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            return res.status(400).json({error: "Invalid page or limit"});
+        }
+        const offset = (page - 1) * limit;
+
         // return 5 for now, might need pagination
         const query = `
         SELECT f.*, COUNT(ftp.plan_id) AS saved_count
         FROM Flight f
-        JOIN FlightTravelPlan ftp ON f.flight_id = ftp.flight_id
+        LEFT JOIN FlightTravelPlan ftp ON f.flight_id = ftp.flight_id
         WHERE f.origin_airport_city LIKE $1 AND f.destination_airport_city LIKE $2
         GROUP BY f.flight_id
         ORDER BY saved_count DESC
-        LIMIT 5;`;
+        LIMIT $3 OFFSET $4;`;
 
-        const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`]);
+        const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`, limit, offset]);
 
         if (flights.length === 0) {
             return res.status(404).json({error: "No flights found"});
         }
 
-        res.status(200).json(flights);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: limit,
+            totalFlights: flights.length,
+            flights,
+        });
     } catch (error) {
         console.error('Error in getPopularFlights:', error);
         res.status(500).json({error: "Internal server error!!!"});
@@ -115,18 +144,34 @@ const getHotels = async (req, res) => {
             return res.status(400).json({error: "City is required."});
         }
 
+        // Pagination
+        let {page = 1, limit = 5} = req.query;
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            return res.status(400).json({error: "Invalid page or limit"});
+        }
+        const offset = (page - 1) * limit;
+
+
         const query = `
         SELECT *
         FROM Hotel
         WHERE city = $1
-        ORDER BY hotel_rating DESC;`;
+        ORDER BY hotel_rating DESC
+        LIMIT $2 OFFSET $3;`;
 
-        const {rows: hotels} = await connection.query(query, [city]);
+        const {rows: hotels} = await connection.query(query, [city, limit, offset]);
         if (hotels.length === 0) {
             return res.status(404).json({error: "No hotels found."});
         }
 
-        res.status(200).json(hotels);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: limit,
+            totalHotels: hotels.length,
+            hotels,
+        });
     } catch (error) {
         console.error('Error in getHotels:', error);
         res.status(500).json({error: "Internal server error!!!"});
@@ -142,23 +187,37 @@ const getPopularHotels = async (req, res) => {
             return res.status(400).json({error: "City is required."});
         }
 
+        // Pagination
+        let {page = 1, limit = 5} = req.query;
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            return res.status(400).json({error: "Invalid page or limit"});
+        }
+        const offset = (page - 1) * limit;
+
         // return 5 for now, might need pagination
         const query = `
         SELECT h.hotel_id, COUNT(htp.plan_id) AS saved_count
         FROM Hotel h
-        JOIN HotelTravelPlan htp ON h.hotel_id = htp.hotel_id
+        LEFT JOIN HotelTravelPlan htp ON h.hotel_id = htp.hotel_id
         WHERE h.city = $1
         GROUP BY h.hotel_id
         ORDER BY saved_count DESC
-        LIMIT 5;`;
+        LIMIT $2 OFFSET $3;`;
 
-        const {rows: hotels} = await connection.query(query, [city]);
+        const {rows: hotels} = await connection.query(query, [city, limit, offset]);
 
         if (hotels.length === 0) {
             return res.status(404).json({error: "No hotels found."});
         }
 
-        res.status(200).json(hotels);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: limit,
+            totalHotels: hotels.length,
+            hotels,
+        });
     } catch (error) {
         console.error('Error in getPopularHotels:', error);
         res.status(500).json({error: "Internal server error!!!"});
