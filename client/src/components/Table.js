@@ -12,7 +12,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Typography,
 } from "@mui/material";
 
 const HotelTable = ({ hotels = [], rowsPerPage, handleChangeRowsPerPage }) => {
@@ -46,25 +45,20 @@ const HotelTable = ({ hotels = [], rowsPerPage, handleChangeRowsPerPage }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      <FormControl sx={{ m: 1, minWidth: 120 }}>
-        <InputLabel>Rows per page</InputLabel>
+      <FormControl sx={{ m: 1, minWidth: 200 }}>
+        <InputLabel>Number of Results</InputLabel>
         <Select
           value={rowsPerPage}
           onChange={handleChangeRowsPerPage}
           label="Rows per page"
         >
-          {[5, 10, 25, 50].map((rows) => (
+          {[5, 10, 25, 50, 100].map((rows) => (
             <MenuItem key={rows} value={rows}>
               {rows}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
-      {/* <Typography sx={{ m: 1 }}>
-        {`Showing 1-${Math.min(rowsPerPage, hotels.length)} of ${
-          hotels.length
-        }`}
-      </Typography> */}
     </Paper>
   );
 };
