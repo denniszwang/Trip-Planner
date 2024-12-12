@@ -477,9 +477,7 @@ const getExpensivePlans = async (req, res) => {
         LEFT JOIN HotelTravelPlan htp ON tp.plan_id = htp.plan_id
         LEFT JOIN Hotel h ON htp.hotel_id = h.hotel_id
         GROUP BY tp.plan_id, u.name, u.email
-        ORDER BY tp.total_cost DESC
-        LIMIT 10;
-        `;
+        ORDER BY tp.total_cost DESC`;
 
         const { rows: plans } = await connection.query(query);
 
