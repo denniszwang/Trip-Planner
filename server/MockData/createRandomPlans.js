@@ -102,7 +102,7 @@ const generateRandomPlan = async () => {
 
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
-            // random plan size
+            // random plan size between 1 and 3
             const planSize = Math.floor(Math.random() * 3) + 1;
 
             const selectedFlights = queryResult
