@@ -126,7 +126,7 @@ const SearchHotel = () => {
     } else if (type === "average") {
       url += "/average";
     }
-    url += `?page=${page + 1}&limit=${rowsPerPage}`; // Add pagination parameters
+    url += `?page=${page + 1}&limit=${rowsPerPage}`;
 
     const response = await fetch(url);
     const data = await response.json();

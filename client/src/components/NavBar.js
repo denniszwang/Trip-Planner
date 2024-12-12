@@ -21,7 +21,7 @@ import Tooltip from "@mui/material/Tooltip";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 
 const drawerWidth = 240;
-const navItems = ["Home", "Flight", "Hotel"];
+const navItems = ["Home", "Flight", "Hotel", "Plans"];
 
 function DrawerAppBar(props) {
   const { window } = props;
