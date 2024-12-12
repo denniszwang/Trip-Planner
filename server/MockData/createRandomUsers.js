@@ -1,5 +1,5 @@
 const { Pool } = require("pg");
-const config = require("./config");
+const config = require("../config.json");
 
 const connection = new Pool({
     user: config.rds_user,
