@@ -78,7 +78,7 @@ const generateRandomPlan = async () => {
     const client = await connection.connect();
     try {
         // get random users
-        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 10`);
+        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 100`);
         if (users.length === 0) {
             console.log("No users found in the database!");
             return;
@@ -95,7 +95,7 @@ const generateRandomPlan = async () => {
         WHERE SPLIT_PART(f.destination_airport_city, ',', 1) = 'Philadelphia'
             OR SPLIT_PART(f.origin_airport_city, ',', 1) = 'Philadelphia'
         ORDER BY RANDOM()
-        LIMIT 30; `);
+        LIMIT 100; `);
 
         // begin transaction
         await client.query("BEGIN");

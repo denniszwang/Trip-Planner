@@ -16,6 +16,19 @@ const connection = new Pool({
   },
 });
 
+const getTotalFlights = async (source, destination) => {
+    const query = `
+        SELECT COUNT(*) AS total_flights
+        FROM Flight
+        WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2;`;
+
+    const { rows } = await connection.query(query, [`${source}%`, `${destination}%`]);
+    if (rows.length === 0) {
+        return 0;
+    }
+    return rows[0].total_flights;
+}
+
 // Route 1: GET /flight/:source/:destination
 // Get all flights from source to destination
 const getFlights = async (req, res) => {
@@ -47,10 +60,11 @@ const getFlights = async (req, res) => {
       return res.status(404).json({error: "No flights found"});
     }
 
+    totalNum = await getTotalFlights(source, destination);
     res.status(200).json({
         currentPage: page,
         pageSize: limit,
-        totalFlights: flights.length,
+        totalFlights: totalNum,
         flights,
     });
   } catch (error) {
@@ -93,10 +107,12 @@ const getPopularFlights = async (req, res) => {
             return res.status(404).json({error: "No flights found"});
         }
 
+        totalNum = await getTotalFlights(source, destination);
+
         res.status(200).json({
             currentPage: page,
             pageSize: limit,
-            totalFlights: flights.length,
+            totalFlights: totalNum,
             flights,
         });
     } catch (error) {
@@ -133,6 +149,21 @@ const getAverageFlights = async (req, res) => {
     }
 };
 
+// helper function to get the total number of hotels in 1 city
+const getTotalHotels = async (city) => {
+    const query = `
+    SELECT COUNT(*) AS total_hotels
+    FROM Hotel
+    WHERE city = $1;`;
+
+    const { rows } = await connection.query(query, [city]);
+    if (rows.length === 0) {
+        return 0;
+    }
+
+    return rows[0].total_hotels;
+}
+
 // Route 4: GET /hotel/:city
 // Get hotels in a city
 const getHotels = async (req, res) => {
@@ -164,10 +195,12 @@ const getHotels = async (req, res) => {
             return res.status(404).json({error: "No hotels found."});
         }
 
+        totalNum = await getTotalHotels(city);
+
         res.status(200).json({
             currentPage: page,
             pageSize: limit,
-            totalHotels: hotels.length,
+            totalHotels: totalNum,
             hotels,
         });
     } catch (error) {
@@ -210,10 +243,12 @@ const getPopularHotels = async (req, res) => {
             return res.status(404).json({error: "No hotels found."});
         }
 
+        totalHotels = await getTotalHotels(city);
+
         res.status(200).json({
             currentPage: page,
             pageSize: limit,
-            totalHotels: hotels.length,
+            totalHotels: totalHotels,
             hotels,
         });
     } catch (error) {
@@ -523,9 +558,7 @@ const getLongestRoutes = async (req, res) => {
         JOIN Flight f ON ftp.flight_id = f.flight_id
         GROUP BY tp.plan_id, u.name, u.email
         HAVING SUM(f.distance_miles) > 0
-        ORDER BY total_distance DESC
-        LIMIT 10;
-        `;
+        ORDER BY total_distance DESC`;
 
         const { rows: itineraries } = await connection.query(query);
 
