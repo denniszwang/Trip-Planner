@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./Search.css";
 import {
   GoogleMap,
-  LoadScript,
   Marker,
   Autocomplete,
+  useJsApiLoader,
 } from "@react-google-maps/api";
+import NavBar from "../components/NavBar";
 
 const containerStyle = {
   width: "50%",
@@ -24,6 +25,12 @@ const SearchCity = () => {
   const [location, setLocation] = useState(philly);
   const [autocomplete, setAutocomplete] = useState(null);
   const [weather, setWeather] = useState(null);
+  const [inputValue, setInputValue] = useState("Philadelphia");
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: mapApi,
+    libraries: ["places"],
+  });
 
   const onLoad = (autocompleteInstance) => {
     setAutocomplete(autocompleteInstance);
@@ -55,7 +62,7 @@ const SearchCity = () => {
     const data = await response.json();
     return {
       city: data.name,
-      temperature: data.main.temp,
+      temperature: Math.round(data.main.temp),
       humidity: data.main.humidity,
       wind: data.wind.speed,
       icon: `http://openweathermap.org/img/wn/${data.weather[0].icon}.png`,
@@ -69,51 +76,52 @@ const SearchCity = () => {
     fetchDefaultWeather();
   }, []);
 
+  if (loadError) {
+    return <div>Error loading maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <LoadScript googleMapsApiKey={mapApi} libraries={["places"]}>
-        <Autocomplete
-          onLoad={onLoad}
-          onPlaceChanged={onPlaceChanged}
-          className="search-container"
-        >
-          <input
-            type="text"
-            placeholder="Philadelphia"
-            className="search-input"
-          />
-        </Autocomplete>
-        {weather && (
-          <div className="weather-container">
-            <img
-              src={weather.icon}
-              alt="weather icon"
-              className="weather-icon"
-            />
-            <h1 className="weather-temp">{weather.temperature}°F</h1>
-            <h2 className="weather-city">{weather.city}</h2>
-            <div className="weather-detail">
-              <div className="detail-item">
-                <p>
-                  <span>Humidity:</span> {weather.humidity}%
-                </p>
-              </div>
-              <div className="detail-item">
-                <p>
-                  <span>Wind Speed:</span> {weather.wind} mph
-                </p>
-              </div>
+      <NavBar />
+      <Autocomplete
+        onLoad={onLoad}
+        onPlaceChanged={onPlaceChanged}
+        className="search-container"
+      >
+        <input
+          type="text"
+          placeholder="Enter a destination city"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="search-input"
+        />
+      </Autocomplete>
+      {weather && (
+        <div className="weather-container">
+          <img src={weather.icon} alt="weather icon" className="weather-icon" />
+          <h1 className="weather-temp">{weather.temperature}°F</h1>
+          <h2 className="weather-city">{weather.city}</h2>
+          <div className="weather-detail">
+            <div className="detail-item">
+              <p>
+                <span>Humidity:</span> {weather.humidity}%
+              </p>
+            </div>
+            <div className="detail-item">
+              <p>
+                <span>Wind Speed:</span> {weather.wind} mph
+              </p>
             </div>
           </div>
-        )}
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={location}
-          zoom={12}
-        >
-          <Marker position={location} />
-        </GoogleMap>
-      </LoadScript>
+        </div>
+      )}
+      <GoogleMap mapContainerStyle={containerStyle} center={location} zoom={12}>
+        <Marker position={location} />
+      </GoogleMap>
     </div>
   );
 };
