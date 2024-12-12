@@ -1,6 +1,4 @@
-// Complex Queries: 10, 11
-
-
+// Complex Queries: 10, 11, 12, 14
 const config = require("./config");
 const { v4: uuid } = require("uuid").v4;
 const { Pool, types } = require("pg");
@@ -421,8 +419,45 @@ const getPlan = async (req, res) => {
 }
 
 // Route 12: PUT /user/:id/plan/:planId
-// TODO: Update a plan by id for a user
+// TODO: Update a plan by id for a user -- not needed?
 const updatePlan = async (req, res) => {};
+
+// Route 12: GET /plans/expensive
+// Get most expensive plans
+const getExpensivePlans = async (req, res) => {
+    try {
+        const query = `
+        SELECT 
+            tp.plan_id, 
+            tp.total_cost, 
+            u.name AS user_name, 
+            u.email AS user_email, 
+            ARRAY_AGG(DISTINCT f.origin_airport_city) || ARRAY_AGG(DISTINCT f.destination_airport_city) AS cities_visited,
+            COUNT(DISTINCT ftp.flight_id) AS total_flights, 
+            COUNT(DISTINCT htp.hotel_id) AS total_hotels
+        FROM TravelPlan tp
+        JOIN Users u ON tp.user_email = u.email
+        LEFT JOIN FlightTravelPlan ftp ON tp.plan_id = ftp.plan_id
+        LEFT JOIN Flight f ON ftp.flight_id = f.flight_id
+        LEFT JOIN HotelTravelPlan htp ON tp.plan_id = htp.plan_id
+        LEFT JOIN Hotel h ON htp.hotel_id = h.hotel_id
+        GROUP BY tp.plan_id, u.name, u.email
+        ORDER BY tp.total_cost DESC
+        LIMIT 10;
+        `;
+
+        const { rows: plans } = await connection.query(query);
+
+        if (plans.length === 0) {
+            return res.status(404).json({ error: "No travel plans found." });
+        }
+
+        res.status(200).json({ plans });
+    } catch (error) {
+        console.error("Error in getExpensiveTravelPlans:", error);
+        res.status(500).json({ error: "Internal server error!!!" });
+    }
+}
 
 // Route 13: DELETE /user/:id/plan/:planId
 // Delete a plan by id for a user
@@ -470,6 +505,42 @@ const deletePlan = async (req, res) => {
     }
 };
 
+// Route 14: GET /plans/longest
+// get longest routes
+const getLongestRoutes = async (req, res) => {
+    try {
+        const query = `
+        SELECT 
+            tp.plan_id, 
+            u.name AS user_name, 
+            u.email AS user_email, 
+            SUM(f.distance_miles) AS total_distance, 
+            ARRAY_AGG(DISTINCT SPLIT_PART(f.origin_airport_city, ',', 1)) || 
+            ARRAY_AGG(DISTINCT SPLIT_PART(f.destination_airport_city, ',', 1)) AS cities_visited
+        FROM TravelPlan tp
+        JOIN Users u ON tp.user_email = u.email
+        JOIN FlightTravelPlan ftp ON tp.plan_id = ftp.plan_id
+        JOIN Flight f ON ftp.flight_id = f.flight_id
+        GROUP BY tp.plan_id, u.name, u.email
+        HAVING SUM(f.distance_miles) > 0
+        ORDER BY total_distance DESC
+        LIMIT 10;
+        `;
+
+        const { rows: itineraries } = await connection.query(query);
+
+        if (itineraries.length === 0) {
+            return res.status(404).json({ error: "No travel plans found." });
+        }
+
+        res.status(200).json({ itineraries });
+    } catch (error) {
+        console.error("Error in getLongestItineraries:", error);
+        res.status(500).json({ error: "Internal server error!!!" });
+    }
+};
+
+
 module.exports = {
   getFlights,
   getPopularFlights,
@@ -483,5 +554,7 @@ module.exports = {
   getPlans,
   getPlan,
   updatePlan,
+  getExpensivePlans,
+  getLongestRoutes,
   deletePlan,
 };

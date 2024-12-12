@@ -78,36 +78,56 @@ const generateRandomPlan = async () => {
     const client = await connection.connect();
     try {
         // get random users
-        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 30`);
+        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 10`);
         if (users.length === 0) {
             console.log("No users found in the database!");
             return;
         }
-        console.log(users)
+
+        // get random combinations of flights and hotels
+        const {rows: queryResult} = await client.query(`
+        SELECT f.flight_id, h.hotel_id,
+            split_part(f.origin_airport_city, ',', 1) AS origin_city,
+            SPLIT_PART(f.destination_airport_city, ',', 1) AS destination_city
+        FROM Flight f
+        JOIN Hotel h
+        ON SPLIT_PART(f.destination_airport_city, ',', 1) = h.city
+        WHERE SPLIT_PART(f.destination_airport_city, ',', 1) = 'Philadelphia'
+            OR SPLIT_PART(f.origin_airport_city, ',', 1) = 'Philadelphia'
+        ORDER BY RANDOM()
+        LIMIT 30; `);
 
         // begin transaction
         await client.query("BEGIN");
 
-        for (const user of users) {
-                const randomPlan = queryResult[Math.floor(Math.random() * queryResult.length)];
-                const [flightId, hotelId, originCity, destinationCity] = randomPlan;
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
+            // random plan size
+            const planSize = Math.floor(Math.random() * 3) + 1;
 
-                const totalCost = (Math.random() * 5000).toFixed(2);
-                const flights = [flightId];
-                const hotels = [hotelId];
+            const selectedFlights = queryResult
+                .sort(() => 0.5 - Math.random())
+                .slice(0, planSize)
+                .map((row) => row.flight_id);
 
-                // create plan
-                const req = {
-                    params: { id: user.email },
-                    body: { total_cost: totalCost, flights, hotels }
-                };
+            const selectedHotels = queryResult
+                .sort(() => 0.5 - Math.random())
+                .slice(0, planSize)
+                .map((row) => row.hotel_id);
 
-                const res = mockResponse();
-                await routes.createPlan(req, res);
+            const totalCost = (Math.random() * 50000).toFixed(2);
 
-                console.log(
-                    `Plan created for ${user.email} from ${originCity} to ${destinationCity}`
-                );
+            const req = {
+                params: { id: user.email },
+                body: { total_cost: totalCost, flights: selectedFlights, hotels: selectedHotels }
+            };
+
+            const res = mockResponse();
+            await routes.createPlan(req, res);
+
+            console.log(
+                `Plan created for ${user.email} with ${planSize} flights and ${planSize} hotels`
+            );
         }
 
         await client.query("COMMIT");
