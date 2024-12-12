@@ -453,10 +453,6 @@ const getPlan = async (req, res) => {
 }
 }
 
-// Route 12: PUT /user/:id/plan/:planId
-// TODO: Update a plan by id for a user -- not needed?
-const updatePlan = async (req, res) => {};
-
 // Route 12: GET /plans/expensive
 // Get most expensive plans
 const getExpensivePlans = async (req, res) => {

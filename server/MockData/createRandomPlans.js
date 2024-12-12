@@ -92,8 +92,8 @@ const generateRandomPlan = async () => {
         FROM Flight f
         JOIN Hotel h
         ON SPLIT_PART(f.destination_airport_city, ',', 1) = h.city
-        WHERE SPLIT_PART(f.destination_airport_city, ',', 1) = 'Philadelphia'
-            OR SPLIT_PART(f.origin_airport_city, ',', 1) = 'Philadelphia'
+        WHERE SPLIT_PART(f.destination_airport_city, ',', 1) = 'Boston'
+            OR SPLIT_PART(f.origin_airport_city, ',', 1) = 'Boston'
         ORDER BY RANDOM()
         LIMIT 100; `);
 
