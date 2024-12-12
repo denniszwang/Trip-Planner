@@ -17,9 +17,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { NavLink } from "react-router-dom";
-import Tooltip from "@mui/material/Tooltip";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-
+import AccountMenu from "./AccountMenu";
 const drawerWidth = 240;
 const navItems = ["Home", "Flight", "Hotel", "Plans"];
 
@@ -89,13 +87,9 @@ function DrawerAppBar(props) {
               </Button>
             ))}
           </Box>
-          <Box sx={{ flexGrow: 1 }} />{" "}
+          <Box sx={{ flexGrow: 1 }} /> {/* Spacer */}
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton sx={{ p: 0 }}>
-                <AccountCircle sx={{ fontSize: 30, mr: 2 }} />
-              </IconButton>
-            </Tooltip>
+            <AccountMenu />
           </Box>
         </Toolbar>
       </AppBar>

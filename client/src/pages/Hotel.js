@@ -191,6 +191,9 @@ const SearchHotel = () => {
         </Tabs>
       </AppBar>
       <TabPanel value={tabIndex} index={0}>
+        <Typography sx={{ width: "50%", margin: "-10px auto 10px" }}>
+          Number of hotels in {inputValue}: {totalHotels}
+        </Typography>
         <Table
           hotels={hotels}
           page={page}
