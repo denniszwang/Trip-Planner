@@ -81,7 +81,7 @@ const getPopularFlights = async (req, res) => {
 
         // return 5 for now, might need pagination
         const query = `
-        SELECT f.*, COUNT(ftp.plan_id) AS saved_count
+        SELECT f.*, COALESCE(COUNT(ftp.plan_id),0) AS saved_count
         FROM Flight f
         LEFT JOIN FlightTravelPlan ftp ON f.flight_id = ftp.flight_id
         WHERE f.origin_airport_city LIKE $1 AND f.destination_airport_city LIKE $2
@@ -198,11 +198,11 @@ const getPopularHotels = async (req, res) => {
 
         // return 5 for now, might need pagination
         const query = `
-        SELECT h.hotel_id, COUNT(htp.plan_id) AS saved_count
+        SELECT h.hotel_id, h.hotel_name, h.hotel_rating, h.hotel_website_url, COALESCE(COUNT(htp.plan_id), 0) AS saved_count
         FROM Hotel h
         LEFT JOIN HotelTravelPlan htp ON h.hotel_id = htp.hotel_id
         WHERE h.city = $1
-        GROUP BY h.hotel_id
+        GROUP BY h.hotel_id, h.hotel_name, h.hotel_rating, h.hotel_website_url
         ORDER BY saved_count DESC
         LIMIT $2 OFFSET $3;`;
 
