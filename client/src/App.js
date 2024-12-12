@@ -1,26 +1,21 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CssBaseline, ThemeProvider } from "@mui/material";
-import { indigo, amber } from "@mui/material/colors";
-import { createTheme } from "@mui/material/styles";
 
 import Search from "./pages/Search";
-
-export const theme = createTheme({
-  palette: {
-    primary: indigo,
-    secondary: amber,
-  },
-});
+import Flight from "./pages/Flight";
+import Hotel from "./pages/Hotel";
+import Table from "./components/Table";
+import NavBar from "./components/NavBar";
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <div>
       <BrowserRouter>
         <Routes>
-          <Route path="/search" element={<Search />} />
+          <Route path="/" element={<Table />} />
+          <Route path="/flight" element={<Flight />} />
+          <Route path="/hotel" element={<Hotel />} />
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
+    </div>
   );
 }
