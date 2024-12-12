@@ -580,7 +580,6 @@ module.exports = {
   createPlan,
   getPlans,
   getPlan,
-  updatePlan,
   getExpensivePlans,
   getLongestRoutes,
   deletePlan,

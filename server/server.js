@@ -23,7 +23,6 @@ app.post("/user", routes.createUser);
 app.post("/user/:id/plan", routes.createPlan);
 app.get("/user/:id/plan", routes.getPlans);
 app.get("/user/:id/plan/:planId", routes.getPlan);
-app.put("/user/:id/plan/:planId", routes.updatePlan);
 app.get("/plans/expensive", routes.getExpensivePlans)
 app.get("/plans/longest", routes.getLongestRoutes)
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
