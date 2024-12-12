@@ -6,7 +6,6 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import axios from "axios";
 const config = require("../config.json");
 
 const AccountDialog = ({ open, onClose }) => {
@@ -21,15 +20,32 @@ const AccountDialog = ({ open, onClose }) => {
     const name = `${firstName} ${lastName}`;
 
     try {
-      const response = await axios.post("http://your-api-url.com/user", {
-        name,
-        email,
-        password,
-      });
-      setMessage(response.data.message);
-      onClose(); // Close the dialog on success
+      const response = await fetch(
+        `http://${config.server_host}:${config.server_port}/user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log(data);
+
+      if (response.ok) {
+        setMessage(data.message);
+        onClose();
+      } else {
+        setMessage(data.error);
+      }
     } catch (error) {
-      setMessage(error.response.data.error);
+      setMessage("An error occurred. Please try again.");
     }
   };
 
@@ -38,7 +54,7 @@ const AccountDialog = ({ open, onClose }) => {
       <DialogTitle>Create Account</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Please fill out the form to create a new account.
+          Please fill out the user information to create a new account.
         </DialogContentText>
         <form onSubmit={handleSubmit}>
           <TextField

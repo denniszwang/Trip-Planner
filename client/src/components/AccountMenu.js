@@ -13,14 +13,28 @@ import Logout from "@mui/icons-material/Logout";
 import Login from "@mui/icons-material/Login";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import AccountDialog from "./AccountDialog";
+import AccountInfo from "./AccountInfo";
 import SignInDialog from "./SignInDialog";
 
 export default function AccountMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [openAccountDialog, setOpenAccountDialog] = React.useState(false);
+  const [openAccountInfo, setOpenAccountInfo] = React.useState(false);
   const [openSignInDialog, setOpenSignInDialog] = React.useState(false);
+  const [userEmail, setUserEmail] = React.useState("");
+  const [userName, setUserName] = React.useState("");
   const open = Boolean(anchorEl);
+
+  React.useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    const name = localStorage.getItem("userName");
+    if (email && name) {
+      setIsLoggedIn(true);
+      setUserEmail(email);
+      setUserName(name);
+    }
+  }, []);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -37,6 +51,10 @@ export default function AccountMenu() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setUserEmail("");
+    setUserName("");
+    localStorage.removeItem("userEmail"); // Clear email from local storage
+    localStorage.removeItem("userName"); // Clear name from local storage
     handleClose();
   };
 
@@ -53,6 +71,21 @@ export default function AccountMenu() {
     setOpenSignInDialog(false);
   };
 
+  const handleCloseAccountInfo = () => {
+    setOpenAccountInfo(false);
+  };
+
+  const handleLoginSuccess = (email, name) => {
+    setIsLoggedIn(true);
+    setUserEmail(email);
+    setUserName(name);
+  };
+
+  const handleOpenAccountInfo = () => {
+    setOpenAccountInfo(true);
+    handleClose();
+  };
+
   return (
     <React.Fragment>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
@@ -66,7 +99,9 @@ export default function AccountMenu() {
             aria-expanded={open ? "true" : undefined}
           >
             {isLoggedIn ? (
-              <Avatar sx={{ width: 32, height: 32 }}>M</Avatar>
+              <Avatar sx={{ width: 32, height: 32 }}>
+                {userName.charAt(0)}
+              </Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: 30, mr: 2 }} />
             )}
@@ -112,8 +147,8 @@ export default function AccountMenu() {
       >
         {isLoggedIn ? (
           <>
-            <MenuItem onClick={handleClose}>
-              <Avatar /> My account
+            <MenuItem onClick={handleOpenAccountInfo}>
+              <Avatar>{userName.charAt(0)}</Avatar> My account
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleOpenAccountDialog}>
@@ -163,7 +198,16 @@ export default function AccountMenu() {
         open={openAccountDialog}
         onClose={handleCloseAccountDialog}
       />
-      <SignInDialog open={openSignInDialog} onClose={handleCloseSignInDialog} />
+      <SignInDialog
+        open={openSignInDialog}
+        onClose={handleCloseSignInDialog}
+        onLoginSuccess={(email, name) => handleLoginSuccess(email, name)}
+      />
+      <AccountInfo
+        open={openAccountInfo}
+        onClose={handleCloseAccountInfo}
+        email={userEmail}
+      />
     </React.Fragment>
   );
 }

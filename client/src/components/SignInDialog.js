@@ -6,18 +6,46 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+const config = require("../config.json");
 
-const SignInDialog = ({ open, onClose }) => {
+const SignInDialog = ({ open, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Implement sign-in logic here
-    // For now, just close the dialog and reset the form
-    setMessage("Sign in successful"); // Placeholder message
-    onClose();
+
+    try {
+      const response = await fetch(
+        `http://${config.server_host}:${config.server_port}/user/${email}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.password === password) {
+          setMessage("Sign in successful");
+          localStorage.setItem("userEmail", email);
+          localStorage.setItem("userName", data.name);
+          onLoginSuccess(email, data.name);
+          onClose();
+        } else {
+          setMessage("Incorrect password. Please try again.");
+        }
+      } else {
+        setMessage(data.error);
+      }
+    } catch (error) {
+      console.error("Error during sign-in:", error);
+      setMessage("An error occurred. Please try again.");
+    }
   };
 
   return (
