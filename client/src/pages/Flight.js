@@ -33,6 +33,8 @@ const SearchFlights = () => {
   const sourceRef = useRef(null);
   const destinationRef = useRef(null);
 
+  const [savedFlights, setSavedFlights] = useState([]); // Keep track of the saved flights
+
   useEffect(() => {
     const storedSourceCity = localStorage.getItem("departureCity");
     const storedDestinationCity = localStorage.getItem("destinationCity");
@@ -143,17 +145,17 @@ const SearchFlights = () => {
     try {
       const response = await fetch(url);
       const data = await response.json();
-      console.log("Fetched Data:", data); // Log the response data
+      console.log("Fetched Data:", data);
 
       if (type === "average") {
         const avgPrice = parseFloat(data.average_price);
         setAveragePrice(isNaN(avgPrice) ? null : avgPrice.toFixed(2));
       } else if (type === "popular") {
         setPopularFlights(data.flights || []);
-        setTotalFlights(data.totalFlights || 0); // Update total flights
+        setTotalFlights(data.totalFlights || 0);
       } else {
         setFlights(data.flights || []);
-        setTotalFlights(data.totalFlights || 0); // Update total flights
+        setTotalFlights(data.totalFlights || 0);
       }
     } catch (error) {
       setError("Failed to fetch flights.");
@@ -164,6 +166,12 @@ const SearchFlights = () => {
   // Go to hotel page
   const goToHotelPage = () => {
     window.location.href = "/hotel";
+  };
+
+  // Save the flight
+  const handleSaveFlight = (flight) => {
+    setSavedFlights((prevSavedFlights) => [...prevSavedFlights, flight]);
+    console.log("Flight saved:", flight);
   };
 
   if (!isLoaded) {
@@ -250,6 +258,7 @@ const SearchFlights = () => {
             flights={flights}
             rowsPerPage={rowsPerPage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
+            onSave={handleSaveFlight}
           />
         </TabPanel>
 
@@ -258,6 +267,7 @@ const SearchFlights = () => {
             flights={popularFlights}
             rowsPerPage={rowsPerPage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
+            onSave={handleSaveFlight}
           />
         </TabPanel>
 
@@ -275,7 +285,7 @@ const SearchFlights = () => {
         </TabPanel>
 
         <Button variant="contained" color="primary" onClick={goToHotelPage}>
-          Next
+          Next: Hotel
         </Button>
 
       </Box>

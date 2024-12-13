@@ -6,7 +6,7 @@ import {
   Autocomplete,
   useJsApiLoader,
 } from "@react-google-maps/api";
-import { AppBar, Tabs, Tab, Box, Typography } from "@mui/material";
+import { AppBar, Tabs, Tab, Button, Box, Typography } from "@mui/material";
 import NavBar from "../components/NavBar";
 import Table from "../components/Table";
 const config = require("../config.json");
@@ -36,6 +36,9 @@ const SearchHotel = () => {
   const [totalPopularHotels, setTotalPopularHotels] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [selectedHotels, setSelectedHotels] = useState([]);
+  const [selectedFlights, setSelectedFlights] = useState([]);
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -176,6 +179,53 @@ const SearchHotel = () => {
     return <div>Loading...</div>;
   }
 
+  const handleSaveHotel = (hotel) => {
+    setSelectedHotels((prevSelected) => {
+      if (!prevSelected.find((h) => h.id === hotel.id)) {
+        return [...prevSelected, hotel];
+      }
+      return prevSelected;
+    });
+  };
+  
+  // Create a plan on the hotel page
+  const createPlan = async () => {
+    const userEmail = localStorage.getItem("email");
+  
+    if (!userEmail || selectedHotels.length === 0 || selectedFlights.length === 0) {
+      alert("Please select at least one hotel and flight to create a plan.");
+      return;
+    }
+  
+    const totalCost = selectedHotels.reduce((acc, hotel) => acc + hotel.price, 0) + selectedFlights.reduce((acc, flight) => acc + flight.price, 0);
+  
+    const planData = {
+      total_cost: totalCost,
+      hotels: selectedHotels.map((hotel) => hotel.id),
+      flights: selectedFlights.map((flight) => flight.id),
+    };
+  
+    try {
+      const response = await fetch(`http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(planData),
+      });
+  
+      const data = await response.json();
+      if (response.ok) {
+        alert("Plan created successfully!");
+      } else {
+        alert(`Error creating plan: ${data.error}`);
+      }
+    } catch (error) {
+      console.error("Error creating plan:", error);
+      alert("Failed to create the plan. Please try again.");
+    }
+  };
+
   return (
     <div>
       <NavBar />
@@ -219,6 +269,7 @@ const SearchHotel = () => {
           rowsPerPage={rowsPerPage}
           handleChangePage={handleChangePage}
           handleChangeRowsPerPage={handleChangeRowsPerPage}
+          onSave={handleSaveHotel}
         />
       </TabPanel>
       <TabPanel value={tabIndex} index={1}>
@@ -228,6 +279,7 @@ const SearchHotel = () => {
           rowsPerPage={rowsPerPage}
           handleChangePage={handleChangePage}
           handleChangeRowsPerPage={handleChangeRowsPerPage}
+          onSave={handleSaveHotel}
         />
       </TabPanel>
       <TabPanel value={tabIndex} index={2}>
@@ -241,6 +293,16 @@ const SearchHotel = () => {
           </Typography>
         )}
       </TabPanel>
+
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={createPlan}
+        sx={{margin: "20px", marginBottom: "40px", marginLeft: "65%"}}
+      >
+        Create Plan
+      </Button>
+
       {weather && (
         <div className="weather-container">
           <img src={weather.icon} alt="weather icon" className="weather-icon" />
@@ -260,9 +322,11 @@ const SearchHotel = () => {
           </div>
         </div>
       )}
+      
       <GoogleMap mapContainerStyle={containerStyle} center={location} zoom={12}>
         <Marker position={location} />
       </GoogleMap>
+
     </div>
   );
 };
