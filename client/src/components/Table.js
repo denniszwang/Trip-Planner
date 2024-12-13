@@ -12,9 +12,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Button,
 } from "@mui/material";
 
-const HotelTable = ({ hotels = [], rowsPerPage, handleChangeRowsPerPage }) => {
+const HotelTable = ({
+  hotels = [],
+  rowsPerPage,
+  handleChangeRowsPerPage,
+  onSave,
+}) => {
   return (
     <Paper sx={{ width: "50%", margin: "0 auto" }}>
       <TableContainer>
@@ -24,6 +30,7 @@ const HotelTable = ({ hotels = [], rowsPerPage, handleChangeRowsPerPage }) => {
               <TableCell>Hotel Name</TableCell>
               <TableCell>Rating</TableCell>
               <TableCell>Website</TableCell>
+              <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -39,6 +46,15 @@ const HotelTable = ({ hotels = [], rowsPerPage, handleChangeRowsPerPage }) => {
                   >
                     {hotel.hotel_website_url}
                   </Link>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => onSave(hotel)}
+                  >
+                    Select
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

@@ -12,12 +12,14 @@ import {
   Select,
   MenuItem,
   Typography,
+  Button,
 } from "@mui/material";
 
 const FlightTable = ({
   flights = [],
   rowsPerPage,
   handleChangeRowsPerPage,
+  onSave,
 }) => {
   return (
     <Paper sx={{ width: "100%", margin: "0 auto", padding: 2 }}>
@@ -30,6 +32,7 @@ const FlightTable = ({
               <TableCell>Origin</TableCell>
               <TableCell>Destination</TableCell>
               <TableCell>Price</TableCell>
+              <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
 
@@ -40,6 +43,15 @@ const FlightTable = ({
                 <TableCell>{flight.origin_airport_city}</TableCell>
                 <TableCell>{flight.destination_airport_city}</TableCell>
                 <TableCell>${flight.fare}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => onSave(flight)}
+                  >
+                    Select
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
