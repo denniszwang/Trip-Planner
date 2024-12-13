@@ -47,7 +47,13 @@ const FlightTable = ({
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => onSave(flight)}
+                    onClick={() => {
+                      localStorage.setItem(
+                        "selectedFlight",
+                        JSON.stringify(flight)
+                      );
+                      onSave(flight);
+                    }}
                   >
                     Select
                   </Button>
