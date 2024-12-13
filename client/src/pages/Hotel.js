@@ -31,9 +31,9 @@ const SearchHotel = () => {
   const [popularHotels, setPopularHotels] = useState([]);
   const [averageRating, setAverageRating] = useState(null);
   const [inputValue, setInputValue] = useState("Philadelphia");
+  const [searchValue, setSearchValue] = useState("Philadelphia");
   const [tabIndex, setTabIndex] = useState(0);
   const [totalHotels, setTotalHotels] = useState(0);
-  const [totalPopularHotels, setTotalPopularHotels] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -43,18 +43,18 @@ const SearchHotel = () => {
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
     if (newValue === 0) {
-      fetchHotels(inputValue, "all", page, rowsPerPage);
+      fetchHotels(searchValue, "all", page, rowsPerPage);
     } else if (newValue === 1) {
-      fetchHotels(inputValue, "popular", page, rowsPerPage);
+      fetchHotels(searchValue, "popular", page, rowsPerPage);
     } else if (newValue === 2) {
-      fetchHotels(inputValue, "average", page, rowsPerPage);
+      fetchHotels(searchValue, "average", page, rowsPerPage);
     }
   };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
     fetchHotels(
-      inputValue,
+      searchValue,
       tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all",
       newPage,
       rowsPerPage
@@ -66,7 +66,7 @@ const SearchHotel = () => {
     setRowsPerPage(newRowsPerPage);
     setPage(0);
     fetchHotels(
-      inputValue,
+      searchValue,
       tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all",
       0,
       newRowsPerPage
@@ -93,13 +93,6 @@ const SearchHotel = () => {
         });
         const city = place.address_components[0].long_name;
         setInputValue(city);
-        fetchWeather(city).then((data) => setWeather(data));
-        fetchHotels(
-          city,
-          tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all",
-          page,
-          rowsPerPage
-        );
       } else {
         console.error("No geometry information for selected place.");
       }
@@ -137,7 +130,6 @@ const SearchHotel = () => {
       setAverageRating(parseFloat(data.average_rating).toFixed(2));
     } else if (type === "popular") {
       setPopularHotels(data.hotels || []);
-      setTotalPopularHotels(data.totalHotels);
     } else {
       setHotels(data.hotels || []);
       setTotalHotels(data.totalHotels);
@@ -148,6 +140,7 @@ const SearchHotel = () => {
     const storedDestinationCity = localStorage.getItem("destinationCity");
     const defaultCity = storedDestinationCity || "Philadelphia";
     setInputValue(defaultCity);
+    setSearchValue(defaultCity);
 
     const fetchDefaultWeather = async () => {
       setWeather(await fetchWeather(defaultCity));
@@ -188,7 +181,17 @@ const SearchHotel = () => {
     });
   };
 
-  // Create a plan on the hotel page
+  const handleSearch = () => {
+    setSearchValue(inputValue);
+    fetchWeather(inputValue).then((data) => setWeather(data));
+    fetchHotels(
+      inputValue,
+      tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all",
+      page,
+      rowsPerPage
+    );
+  };
+
   const createPlan = async () => {
     const userEmail = localStorage.getItem("email");
 
@@ -244,6 +247,8 @@ const SearchHotel = () => {
           alignItems: "center",
           justifyContent: "center",
           gap: "10px",
+          width: "50%",
+          margin: "0 auto",
         }}
       >
         <Autocomplete
@@ -266,6 +271,14 @@ const SearchHotel = () => {
             }}
           />
         </Autocomplete>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSearch}
+          sx={{ padding: "8px 20px", marginTop: "65px" }}
+        >
+          Search Hotel
+        </Button>
         <Button
           variant="contained"
           color="secondary"
@@ -294,7 +307,7 @@ const SearchHotel = () => {
       </AppBar>
       <TabPanel value={tabIndex} index={0}>
         <Typography sx={{ width: "50%", margin: "-10px auto 10px" }}>
-          Number of hotels in {inputValue}: {totalHotels}
+          Number of hotels in {searchValue}: {totalHotels}
         </Typography>
         <Table
           hotels={hotels}
@@ -318,7 +331,7 @@ const SearchHotel = () => {
       <TabPanel value={tabIndex} index={2}>
         {averageRating !== null ? (
           <Typography sx={{ width: "50%", margin: "0 auto" }}>
-            Average rating of hotels in {inputValue}: {averageRating}
+            Average rating of hotels in {searchValue}: {averageRating}
           </Typography>
         ) : (
           <Typography sx={{ width: "50%", margin: "0 auto" }}>
