@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   TextField,
   Button,
@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import NavBar from "../components/NavBar";
 import PlanDialog from "../components/PlanDialog";
+import { UserContext } from "../Usercontext";
 const config = require("../config.json");
 
 const mapApi = "AIzaSyAAkxzWh-FQW3UkJjQPzonay6kGyEC86Wg";
@@ -24,7 +25,6 @@ const mapApi = "AIzaSyAAkxzWh-FQW3UkJjQPzonay6kGyEC86Wg";
 const Home = () => {
   const [source, setSource] = useState("");
   const [destination, setDestination] = useState("");
-  const [userName, setUserName] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [plans, setPlans] = useState([]);
@@ -34,35 +34,32 @@ const Home = () => {
   const [autocompleteSource, setAutocompleteSource] = useState(null);
   const [autocompleteDestination, setAutocompleteDestination] = useState(null);
 
+  const { user } = useContext(UserContext);
+
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: mapApi,
     libraries: ["places"],
   });
 
   useEffect(() => {
-    const name = localStorage.getItem("userName");
-    if (name) {
-      const firstName = name.split(" ")[0];
-      setUserName(firstName);
-    }
-
-    const fetchPlans = async () => {
-      const email = localStorage.getItem("userEmail");
-      if (email) {
+    if (user.isLoggedIn) {
+      const fetchPlans = async () => {
         try {
           const response = await fetch(
-            `http://${config.server_host}:${config.server_port}/user/${email}/plan`
+            `http://${config.server_host}:${config.server_port}/user/${user.email}/plan`
           );
           const data = await response.json();
           setPlans(data.plans);
         } catch (error) {
           console.error("Error fetching plans:", error);
         }
-      }
-    };
+      };
 
-    fetchPlans();
-  }, []);
+      fetchPlans();
+    } else {
+      setPlans([]);
+    }
+  }, [user]);
 
   const handleCreateNewPlan = () => {
     localStorage.setItem("departureCity", source);
@@ -154,7 +151,7 @@ const Home = () => {
           gutterBottom
           sx={{ mt: 7, mb: 2, textAlign: "left" }}
         >
-          Welcome to Trip Planner, {userName}
+          Welcome to Trip Planner, {user.name.split(" ")[0]}
         </Typography>
         <Box
           sx={{

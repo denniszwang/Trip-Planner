@@ -15,26 +15,23 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import AccountDialog from "./AccountDialog";
 import AccountInfo from "./AccountInfo";
 import SignInDialog from "./SignInDialog";
+import { UserContext } from "../Usercontext";
 
 export default function AccountMenu() {
+  const { user, setUser } = React.useContext(UserContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [openAccountDialog, setOpenAccountDialog] = React.useState(false);
   const [openAccountInfo, setOpenAccountInfo] = React.useState(false);
   const [openSignInDialog, setOpenSignInDialog] = React.useState(false);
-  const [userEmail, setUserEmail] = React.useState("");
-  const [userName, setUserName] = React.useState("");
   const open = Boolean(anchorEl);
 
   React.useEffect(() => {
     const email = localStorage.getItem("userEmail");
     const name = localStorage.getItem("userName");
     if (email && name) {
-      setIsLoggedIn(true);
-      setUserEmail(email);
-      setUserName(name);
+      setUser({ isLoggedIn: true, email, name });
     }
-  }, []);
+  }, [setUser]);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -50,11 +47,9 @@ export default function AccountMenu() {
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserEmail("");
-    setUserName("");
-    localStorage.removeItem("userEmail"); // Clear email from local storage
-    localStorage.removeItem("userName"); // Clear name from local storage
+    setUser({ isLoggedIn: false, email: "", name: "" });
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
     handleClose();
   };
 
@@ -76,9 +71,9 @@ export default function AccountMenu() {
   };
 
   const handleLoginSuccess = (email, name) => {
-    setIsLoggedIn(true);
-    setUserEmail(email);
-    setUserName(name);
+    setUser({ isLoggedIn: true, email, name });
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("userName", name);
   };
 
   const handleOpenAccountInfo = () => {
@@ -98,9 +93,9 @@ export default function AccountMenu() {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
           >
-            {isLoggedIn ? (
+            {user.isLoggedIn ? (
               <Avatar sx={{ width: 32, height: 32 }}>
-                {userName.charAt(0)}
+                {user.name.charAt(0)}
               </Avatar>
             ) : (
               <AccountCircle sx={{ fontSize: 30, mr: 2 }} />
@@ -145,10 +140,10 @@ export default function AccountMenu() {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {isLoggedIn ? (
+        {user.isLoggedIn ? (
           <>
             <MenuItem onClick={handleOpenAccountInfo}>
-              <Avatar>{userName.charAt(0)}</Avatar> My account
+              <Avatar>{user.name.charAt(0)}</Avatar> My account
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleOpenAccountDialog}>
@@ -206,7 +201,7 @@ export default function AccountMenu() {
       <AccountInfo
         open={openAccountInfo}
         onClose={handleCloseAccountInfo}
-        email={userEmail}
+        email={user.email}
       />
     </React.Fragment>
   );
