@@ -187,33 +187,42 @@ const SearchHotel = () => {
       return prevSelected;
     });
   };
-  
+
   // Create a plan on the hotel page
   const createPlan = async () => {
     const userEmail = localStorage.getItem("email");
-  
-    if (!userEmail || selectedHotels.length === 0 || selectedFlights.length === 0) {
+
+    if (
+      !userEmail ||
+      selectedHotels.length === 0 ||
+      selectedFlights.length === 0
+    ) {
       alert("Please select at least one hotel and flight to create a plan.");
       return;
     }
-  
-    const totalCost = selectedHotels.reduce((acc, hotel) => acc + hotel.price, 0) + selectedFlights.reduce((acc, flight) => acc + flight.price, 0);
-  
+
+    const totalCost =
+      selectedHotels.reduce((acc, hotel) => acc + hotel.price, 0) +
+      selectedFlights.reduce((acc, flight) => acc + flight.price, 0);
+
     const planData = {
       total_cost: totalCost,
       hotels: selectedHotels.map((hotel) => hotel.id),
       flights: selectedFlights.map((flight) => flight.id),
     };
-  
+
     try {
-      const response = await fetch(`http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(planData),
-      });
-  
+      const response = await fetch(
+        `http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(planData),
+        }
+      );
+
       const data = await response.json();
       if (response.ok) {
         alert("Plan created successfully!");
@@ -229,19 +238,43 @@ const SearchHotel = () => {
   return (
     <div>
       <NavBar />
-      <Autocomplete
-        onLoad={onLoad}
-        onPlaceChanged={onPlaceChanged}
-        className="search-container"
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "10px",
+        }}
       >
-        <input
-          type="text"
-          placeholder="Enter a destination city"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          className="search-input"
-        />
-      </Autocomplete>
+        <Autocomplete
+          onLoad={onLoad}
+          onPlaceChanged={onPlaceChanged}
+          className="search-container"
+        >
+          <input
+            type="text"
+            placeholder="Enter a destination city"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            className="search-input"
+            style={{
+              width: "300px",
+              padding: "8px",
+              fontSize: "16px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+          />
+        </Autocomplete>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={createPlan}
+          sx={{ padding: "8px 20px", marginTop: "65px" }}
+        >
+          Save Plan
+        </Button>
+      </div>
       <AppBar
         position="static"
         color="default"
@@ -294,15 +327,6 @@ const SearchHotel = () => {
         )}
       </TabPanel>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={createPlan}
-        sx={{margin: "20px", marginBottom: "40px", marginLeft: "65%"}}
-      >
-        Create Plan
-      </Button>
-
       {weather && (
         <div className="weather-container">
           <img src={weather.icon} alt="weather icon" className="weather-icon" />
@@ -322,11 +346,10 @@ const SearchHotel = () => {
           </div>
         </div>
       )}
-      
+
       <GoogleMap mapContainerStyle={containerStyle} center={location} zoom={12}>
         <Marker position={location} />
       </GoogleMap>
-
     </div>
   );
 };

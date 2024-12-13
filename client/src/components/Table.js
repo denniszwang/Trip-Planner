@@ -51,7 +51,13 @@ const HotelTable = ({
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => onSave(hotel)}
+                    onClick={() => {
+                      localStorage.setItem(
+                        "selectedHotel",
+                        JSON.stringify(hotel)
+                      );
+                      onSave(hotel);
+                    }}
                   >
                     Select
                   </Button>
