@@ -13,6 +13,7 @@ import {
   Paper,
   TablePagination,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import NavBar from "../components/NavBar";
 import PlanDialog from "../components/PlanDialog";
 const config = require("../config.json");
@@ -26,6 +27,7 @@ const Home = () => {
   const [plans, setPlans] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const name = localStorage.getItem("userName");
@@ -52,8 +54,10 @@ const Home = () => {
     fetchPlans();
   }, []);
 
-  const handleSearch = () => {
-    console.log(`Searching flights from ${source} to ${destination}`);
+  const handleCreateNewPlan = () => {
+    localStorage.setItem("departureCity", source);
+    localStorage.setItem("destinationCity", destination);
+    navigate("/flight");
   };
 
   const handleChangePage = (event, newPage) => {
@@ -108,14 +112,14 @@ const Home = () => {
           }}
         >
           <TextField
-            label="Source City"
+            label="Departure City"
             variant="outlined"
             value={source}
             onChange={(e) => setSource(e.target.value)}
             sx={{ flex: 1 }}
           />
           <TextField
-            label="Destination"
+            label="Destination City"
             variant="outlined"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
@@ -124,10 +128,10 @@ const Home = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleSearch}
+            onClick={handleCreateNewPlan}
             sx={{ height: "56px", whiteSpace: "nowrap" }}
           >
-            Search Flights
+            Create New Plan
           </Button>
         </Box>
         <Typography variant="h6" gutterBottom>
