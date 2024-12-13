@@ -44,7 +44,7 @@ const Plans = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
-    setPage(0); // Reset page when tab changes
+    setPage(0);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -54,6 +54,16 @@ const Plans = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const extractCityNames = (cities) => {
+    return Array.from(new Set(cities.map((city) => city.split(",")[0]))).join(
+      ", "
+    );
+  };
+
+  const formatNumber = (number) => {
+    return Math.round(number).toLocaleString();
   };
 
   return (
@@ -97,9 +107,9 @@ const Plans = () => {
                   <TableRow key={plan.plan_id}>
                     <TableCell>{plan.user_name}</TableCell>
                     <TableCell>
-                      {Array.from(new Set(plan.cities_visited)).join(", ")}
+                      {extractCityNames(plan.cities_visited)}
                     </TableCell>
-                    <TableCell>{plan.total_cost}</TableCell>
+                    <TableCell>${formatNumber(plan.total_cost)}</TableCell>
                     <TableCell>{plan.total_flights}</TableCell>
                     <TableCell>{plan.total_hotels}</TableCell>
                   </TableRow>
@@ -137,9 +147,11 @@ const Plans = () => {
                   <TableRow key={trip.plan_id}>
                     <TableCell>{trip.user_name}</TableCell>
                     <TableCell>
-                      {Array.from(new Set(trip.cities_visited)).join(", ")}
+                      {extractCityNames(trip.cities_visited)}
                     </TableCell>
-                    <TableCell>{trip.total_distance}</TableCell>
+                    <TableCell>
+                      {formatNumber(trip.total_distance)} miles
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
