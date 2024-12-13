@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./Search.css";
 import {
   AppBar,
@@ -9,10 +9,7 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import {
-  Autocomplete,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import NavBar from "../components/NavBar";
 import FlightTable from "../components/FlightTable";
 
@@ -21,38 +18,51 @@ const mapApi = "AIzaSyAAkxzWh-FQW3UkJjQPzonay6kGyEC86Wg";
 
 const SearchFlights = () => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [source, setSource] = useState("Chicago");
-  const [destination, setDestination] = useState("Philadelphia");
+  const [inputSource, setInputSource] = useState("");
+  const [inputDestination, setInputDestination] = useState("");
+  const [source, setSource] = useState("");
+  const [destination, setDestination] = useState("");
   const [flights, setFlights] = useState([]);
   const [averagePrice, setAveragePrice] = useState(null);
   const [popularFlights, setPopularFlights] = useState([]);
   const [totalFlights, setTotalFlights] = useState(0);
   const [error, setError] = useState(null);
 
-  const [page, setPage] = useState(0); // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Rows per page state
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const sourceRef = useRef(null);
   const destinationRef = useRef(null);
 
+  useEffect(() => {
+    const storedSourceCity = localStorage.getItem("departureCity");
+    const storedDestinationCity = localStorage.getItem("destinationCity");
+    if (storedSourceCity) {
+      setInputSource(storedSourceCity);
+      setSource(storedSourceCity);
+    }
+    if (storedDestinationCity) {
+      setInputDestination(storedDestinationCity);
+      setDestination(storedDestinationCity);
+    }
+
+    if (storedSourceCity && storedDestinationCity) {
+      fetchFlights(
+        storedSourceCity,
+        storedDestinationCity,
+        "all",
+        0,
+        rowsPerPage
+      );
+    }
+  }, [rowsPerPage]);
+
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
-    if (newValue === 0) {
-      fetchFlights(source, destination, "all", page, rowsPerPage);
-    } else if (newValue === 1) {
-      fetchFlights(source, destination, "popular", page, rowsPerPage);
-    } else if (newValue === 2) {
-      fetchFlights(source, destination, "average", page, rowsPerPage);
-    }
-  };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
     fetchFlights(
       source,
       destination,
-      tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all",
-      newPage,
+      newValue === 1 ? "popular" : newValue === 2 ? "average" : "all",
+      0,
       rowsPerPage
     );
   };
@@ -60,7 +70,6 @@ const SearchFlights = () => {
   const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
-    setPage(0);
     fetchFlights(
       source,
       destination,
@@ -86,36 +95,50 @@ const SearchFlights = () => {
 
   const handlePlaceChange = (type) => {
     const place =
-      type === "source" ? sourceRef.current.getPlace() : destinationRef.current.getPlace();
-  
+      type === "source"
+        ? sourceRef.current.getPlace()
+        : destinationRef.current.getPlace();
+
     if (place && place.address_components) {
       // Extract the city name from the address components
       const cityComponent = place.address_components.find((component) =>
         component.types.includes("locality")
       );
-  
       const cityName = cityComponent ? cityComponent.long_name : null;
-  
+
       if (type === "source" && cityName) {
-        setSource(cityName);
+        setInputSource(cityName);
       } else if (type === "destination" && cityName) {
-        setDestination(cityName);
+        setInputDestination(cityName);
       }
     }
   };
-  
+
   const handleSearch = () => {
-    fetchFlights(source, destination, tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all");
+    setSource(inputSource);
+    setDestination(inputDestination);
+    fetchFlights(
+      inputSource,
+      inputDestination,
+      tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all"
+    );
   };
 
   // Fetch flights
-  const fetchFlights = async (source, destination, type, page = 0, limit = rowsPerPage) => {
+  const fetchFlights = async (
+    source,
+    destination,
+    type,
+    page = 0,
+    limit = rowsPerPage
+  ) => {
     let url = `http://${config.server_host}:${config.server_port}/flight/${source}/${destination}`;
     if (type === "popular") {
       url += "/popular";
     } else if (type === "average") {
       url += "/average";
     }
+    url += `?page=${page + 1}&limit=${limit}`;
 
     try {
       const response = await fetch(url);
@@ -123,7 +146,8 @@ const SearchFlights = () => {
       console.log("Fetched Data:", data); // Log the response data
 
       if (type === "average") {
-        setAveragePrice(data.average_price).toFixed(2);
+        const avgPrice = parseFloat(data.average_price);
+        setAveragePrice(isNaN(avgPrice) ? null : avgPrice.toFixed(2));
       } else if (type === "popular") {
         setPopularFlights(data.flights || []);
         setTotalFlights(data.totalFlights || 0); // Update total flights
@@ -137,11 +161,19 @@ const SearchFlights = () => {
     }
   };
 
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <NavBar/>
-      <Box sx={{ p: 3, mt: 7 }}>
-        <Typography variant="h4" gutterBottom>
+      <NavBar />
+      <Box sx={{ p: 3, mt: 7, width: "50%", margin: "0 auto" }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ mt: 7, mb: 2, textAlign: "left" }}
+        >
           Flight Search
         </Typography>
         <Box
@@ -154,27 +186,31 @@ const SearchFlights = () => {
           }}
         >
           <Autocomplete
-            onLoad={(autocompleteInstance) => onLoad(autocompleteInstance, "source")}
+            onLoad={(autocompleteInstance) =>
+              onLoad(autocompleteInstance, "source")
+            }
             onPlaceChanged={() => handlePlaceChange("source")}
           >
             <TextField
-              label="Source City"
+              label="Departure"
               variant="outlined"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
+              value={inputSource}
+              onChange={(e) => setInputSource(e.target.value)}
               sx={{ flex: 1 }}
             />
           </Autocomplete>
 
           <Autocomplete
-            onLoad={(autocompleteInstance) => onLoad(autocompleteInstance, "destination")}
+            onLoad={(autocompleteInstance) =>
+              onLoad(autocompleteInstance, "destination")
+            }
             onPlaceChanged={() => handlePlaceChange("destination")}
           >
             <TextField
               label="Destination"
               variant="outlined"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
+              value={inputDestination}
+              onChange={(e) => setInputDestination(e.target.value)}
               sx={{ flex: 1 }}
             />
           </Autocomplete>
@@ -183,10 +219,7 @@ const SearchFlights = () => {
             variant="contained"
             color="primary"
             onClick={handleSearch}
-            sx={{
-              height: "56px", // Matches the height of TextField
-              whiteSpace: "nowrap",
-            }}
+            sx={{ flex: 1, height: "56px", whiteSpace: "nowrap" }}
           >
             Search Flights
           </Button>
@@ -205,14 +238,12 @@ const SearchFlights = () => {
         </AppBar>
 
         <TabPanel value={tabIndex} index={0}>
-          <Typography sx={{ width: "50%", margin: "-10px auto 10px" }}>
+          <Typography sx={{ margin: "-10px auto 10px" }}>
             Number of flights from {source} to {destination}: {totalFlights}
           </Typography>
           <FlightTable
             flights={flights}
-            page={page}
             rowsPerPage={rowsPerPage}
-            handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </TabPanel>
@@ -220,16 +251,14 @@ const SearchFlights = () => {
         <TabPanel value={tabIndex} index={1}>
           <FlightTable
             flights={popularFlights}
-            page={page}
             rowsPerPage={rowsPerPage}
-            handleChangePage={handleChangePage}
             handleChangeRowsPerPage={handleChangeRowsPerPage}
           />
         </TabPanel>
 
         <TabPanel value={tabIndex} index={2}>
           {averagePrice !== null ? (
-            <Typography sx={{ width: "50%", margin: "0 auto" }}>
+            <Typography sx={{ margin: "0 auto" }}>
               Average price of flights from {source} to {destination}: $
               {Number(averagePrice).toFixed(2)}
             </Typography>
@@ -239,7 +268,6 @@ const SearchFlights = () => {
             </Typography>
           )}
         </TabPanel>
-
       </Box>
     </div>
   );

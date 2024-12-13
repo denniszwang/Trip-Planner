@@ -14,9 +14,13 @@ import {
   Typography,
 } from "@mui/material";
 
-const FlightTable = ({ flights = [], rowsPerPage, handleChangeRowsPerPage }) => {
+const FlightTable = ({
+  flights = [],
+  rowsPerPage,
+  handleChangeRowsPerPage,
+}) => {
   return (
-    <Paper sx={{ width: "80%", margin: "0 auto", padding: 2 }}>
+    <Paper sx={{ width: "100%", margin: "0 auto", padding: 2 }}>
       {/* Table Container */}
       <TableContainer>
         <Table>
