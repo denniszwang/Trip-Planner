@@ -42,6 +42,17 @@ const Home = () => {
   });
 
   useEffect(() => {
+    const storedSource = localStorage.getItem("departureCity");
+    const storedDestination = localStorage.getItem("destinationCity");
+    if (storedSource) {
+      setSource(storedSource);
+    }
+    if (storedDestination) {
+      setDestination(storedDestination);
+    }
+  }, []);
+
+  useEffect(() => {
     if (user.isLoggedIn) {
       const fetchPlans = async () => {
         try {
@@ -65,6 +76,10 @@ const Home = () => {
     localStorage.setItem("departureCity", source);
     localStorage.setItem("destinationCity", destination);
     navigate("/flight");
+  };
+
+  const handleTopPlans = () => {
+    navigate("/plans");
   };
 
   const handleChangePage = (event, newPage) => {
@@ -193,6 +208,14 @@ const Home = () => {
             sx={{ height: "56px", whiteSpace: "nowrap" }}
           >
             Create New Plan
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleTopPlans}
+            sx={{ height: "56px", whiteSpace: "nowrap" }}
+          >
+            Top Plans
           </Button>
         </Box>
         <Typography variant="h6" gutterBottom>
