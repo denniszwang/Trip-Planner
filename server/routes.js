@@ -6,14 +6,14 @@ const { Pool, types } = require("pg");
 types.setTypeParser(20, (val) => parseInt(val, 10));
 
 const connection = new Pool({
-  user: config.rds_user,
-  host: config.rds_host,
-  database: config.rds_db,
-  password: config.rds_password,
-  port: config.rds_port,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+    user: config.rds_user,
+    host: config.rds_host,
+    database: config.rds_db,
+    password: config.rds_password,
+    port: config.rds_port,
+    ssl: {
+        rejectUnauthorized: false,
+    },
 });
 
 const getTotalFlights = async (source, destination) => {
@@ -32,45 +32,45 @@ const getTotalFlights = async (source, destination) => {
 // Route 1: GET /flight/:source/:destination
 // Get all flights from source to destination
 const getFlights = async (req, res) => {
-  try {
-    const source = req.params.source;
-    const destination = req.params.destination;
-    if (!source || !destination) {
-      return res.status(400).json({error: "Invalid source or destination"});
-    }
+    try {
+        const source = req.params.source;
+        const destination = req.params.destination;
+        if (!source || !destination) {
+            return res.status(400).json({error: "Invalid source or destination"});
+        }
 
-    // Pagination
-    let {page = 1, limit = 5} = req.query;
-    page = parseInt(page, 10);
-    limit = parseInt(limit, 10);
-    if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
-        return res.status(400).json({error: "Invalid page or limit"});
-    }
-    const offset = (page - 1) * limit;
+        // Pagination
+        let {page = 1, limit = 5} = req.query;
+        page = parseInt(page, 10);
+        limit = parseInt(limit, 10);
+        if (isNaN(page) || isNaN(limit) || page < 1 || limit < 1) {
+            return res.status(400).json({error: "Invalid page or limit"});
+        }
+        const offset = (page - 1) * limit;
 
-    const query = `
+        const query = `
     SELECT *
     FROM Flight
     WHERE origin_airport_city LIKE $1 AND destination_airport_city LIKE $2
        LIMIT $3 OFFSET $4;`;
 
-    const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`, limit, offset]);
+        const {rows: flights} = await connection.query(query, [`${source}%`, `${destination}%`, limit, offset]);
 
-    if (flights.length === 0) {
-      return res.status(404).json({error: "No flights found"});
+        if (flights.length === 0) {
+            return res.status(404).json({error: "No flights found"});
+        }
+
+        totalNum = await getTotalFlights(source, destination);
+        res.status(200).json({
+            currentPage: page,
+            pageSize: limit,
+            totalFlights: totalNum,
+            flights,
+        });
+    } catch (error) {
+        console.error('Error in getFlights:', error);
+        res.status(500).json({error: "Internal server error!!!"});
     }
-
-    totalNum = await getTotalFlights(source, destination);
-    res.status(200).json({
-        currentPage: page,
-        pageSize: limit,
-        totalFlights: totalNum,
-        flights,
-    });
-  } catch (error) {
-    console.error('Error in getFlights:', error);
-    res.status(500).json({error: "Internal server error!!!"});
-  }
 };
 
 // Route 2: GET /flight/:source/:destination/popular
@@ -286,27 +286,27 @@ const getAverageHotels = async (req, res) => {
 // Route 7: GET /user/:id
 // Get user by id
 const getUser = async (req, res) => {
-  try {
-    const {id: email} = req.params;
-    if (!email) {
-      return res.status(400).json({error: "Email is required."});
-    }
+    try {
+        const {id: email} = req.params;
+        if (!email) {
+            return res.status(400).json({error: "Email is required."});
+        }
 
-    const query =  `
+        const query =  `
     SELECT * 
     FROM Users
     WHERE email = $1`;
 
-    const {rows:user} = await connection.query(query, [email]);
-    if (user.length === 0) {
-        return res.status(404).json({error: "User not found."});
-    }
+        const {rows:user} = await connection.query(query, [email]);
+        if (user.length === 0) {
+            return res.status(404).json({error: "User not found."});
+        }
 
-    res.status(200).json(user[0]);
-  } catch (error) {
-    console.error('Error in getUser:', error);
-    res.status(500).json({error: "Internal server error!!!"});
-  }
+        res.status(200).json(user[0]);
+    } catch (error) {
+        console.error('Error in getUser:', error);
+        res.status(500).json({error: "Internal server error!!!"});
+    }
 };
 
 // Route 8: POST /user
@@ -316,7 +316,7 @@ const createUser = async (req, res) => {
         const {name, email, password} = req.body;
 
         if (!name || !email || !password) {
-        return res.status(400).json({error: "All fields are required to register a user!!!"});
+            return res.status(400).json({error: "All fields are required to register a user!!!"});
         }
 
         const query = `
@@ -329,7 +329,7 @@ const createUser = async (req, res) => {
     } catch (error) {
         console.error('Error in createUser:', error);
         if (error.code === '23505') {
-          return res.status(409).json({error: "User email already exists"});
+            return res.status(409).json({error: "User email already exists"});
         }
         res.status(500).json({error: "Internal server error!!!"});
     }
@@ -341,11 +341,39 @@ const createPlan = async (req, res) => {
     const client = await connection.connect();
     try {
         const {id: email} = req.params;
-        const {total_cost, hotels, flights} = req.body;
+        const {hotels, flights} = req.body;
 
-        if (!email || !total_cost || !hotels || !flights) {
+        if (!email || !hotels || !flights || hotels.length === 0 || flights.length === 0) {
             return res.status(400).json({error: "Missing required fields"});
         }
+
+        // Calculate total cost
+        const flightQuery = `
+    SELECT SUM(fare) AS flight_cost
+    FROM Flight
+    WHERE flight_id = ANY($1);
+    `;
+        const { rows: flightCostRows } = await client.query(flightQuery, [flights]);
+        const flightCost = flightCostRows[0].flight_cost || 0;
+
+        // Calculate hotel cost based on ratings
+        const hotelQuery = `
+            SELECT hotel_id, hotel_rating
+            fROM Hotel
+            WHERE hotel_id = ANY($1);
+            `;
+        const { rows: hotelRows } = await client.query(hotelQuery, [hotels]);
+
+        let hotelCost = 0;
+        hotelRows.forEach(({ hotel_rating }) => {
+            const minRate = (hotel_rating - 1) * 100;
+            const maxRate = hotel_rating * 100;
+            hotelCost += Math.floor(Math.random() * (maxRate - minRate + 1)) + minRate;
+        });
+        console.log('flightCost:', flightCost);
+        console.log('hotelCost:', hotelCost);
+        const totalCost = Math.floor(flightCost) + Math.floor(hotelCost);
+        console.log('totalCost:', totalCost);
 
         // Start transaction
         await client.query("BEGIN");
@@ -356,7 +384,7 @@ const createPlan = async (req, res) => {
             VALUES ($1, $2)
             RETURNING plan_id`;
 
-        const {rows: plan} = await client.query(insertPlanQuery, [total_cost, email]);
+        const {rows: plan} = await client.query(insertPlanQuery, [totalCost, email]);
         const planId = plan[0].plan_id;
 
         // Update HotelTravelPlan
@@ -450,7 +478,7 @@ const getPlan = async (req, res) => {
     } catch (error) {
         console.error('Error in getPlan:', error);
         res.status(500).json({error: "Internal server error!!!"});
-}
+    }
 }
 
 // Route 12: GET /plans/expensive
@@ -569,18 +597,19 @@ const getLongestRoutes = async (req, res) => {
 
 
 module.exports = {
-  getFlights,
-  getPopularFlights,
-  getAverageFlights,
-  getHotels,
-  getPopularHotels,
-  getAverageHotels,
-  getUser,
-  createUser,
-  createPlan,
-  getPlans,
-  getPlan,
-  getExpensivePlans,
-  getLongestRoutes,
-  deletePlan,
+    getFlights,
+    getPopularFlights,
+    getAverageFlights,
+    getHotels,
+    getPopularHotels,
+    getAverageHotels,
+    getUser,
+    createUser,
+    createPlan,
+    getPlans,
+    getPlan,
+    getExpensivePlans,
+    getLongestRoutes,
+    deletePlan,
 };
+
