@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Search from "./pages/Search";
 import Flight from "./pages/Flight";
 import Hotel from "./pages/Hotel";
 import Plan from "./pages/Plan";

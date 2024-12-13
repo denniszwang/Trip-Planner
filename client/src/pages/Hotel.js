@@ -142,11 +142,30 @@ const SearchHotel = () => {
   };
 
   useEffect(() => {
+    const storedDestinationCity = localStorage.getItem("destinationCity");
+    const defaultCity = storedDestinationCity || "Philadelphia";
+    setInputValue(defaultCity);
+
     const fetchDefaultWeather = async () => {
-      setWeather(await fetchWeather("Philadelphia"));
-      fetchHotels("Philadelphia", "all", page, rowsPerPage);
+      setWeather(await fetchWeather(defaultCity));
+      fetchHotels(defaultCity, "all", page, rowsPerPage);
     };
+
+    const fetchDefaultLocation = async () => {
+      if (storedDestinationCity) {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${storedDestinationCity}&key=${mapApi}`
+        );
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const { lat, lng } = data.results[0].geometry.location;
+          setLocation({ lat, lng });
+        }
+      }
+    };
+
     fetchDefaultWeather();
+    fetchDefaultLocation();
   }, [page, rowsPerPage]);
 
   if (loadError) {
