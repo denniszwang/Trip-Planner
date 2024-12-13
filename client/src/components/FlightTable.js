@@ -21,6 +21,19 @@ const FlightTable = ({
   handleChangeRowsPerPage,
   onSave,
 }) => {
+  const handleSelect = (flight) => {
+    let selectedFlightIds =
+      JSON.parse(localStorage.getItem("selectedFlightIds")) || [];
+    if (!selectedFlightIds.includes(flight.flight_id)) {
+      selectedFlightIds.push(flight.flight_id);
+      localStorage.setItem(
+        "selectedFlightIds",
+        JSON.stringify(selectedFlightIds)
+      );
+    }
+    onSave(flight);
+  };
+
   return (
     <Paper sx={{ width: "100%", margin: "0 auto", padding: 2 }}>
       {/* Table Container */}
@@ -29,9 +42,9 @@ const FlightTable = ({
           {/* Table Header */}
           <TableHead>
             <TableRow>
-              <TableCell>Origin</TableCell>
-              <TableCell>Destination</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Average Price</TableCell>
+              <TableCell>Lowest Price</TableCell>
+              <TableCell>Passengers Number</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
@@ -40,20 +53,14 @@ const FlightTable = ({
           <TableBody>
             {flights.slice(0, rowsPerPage).map((flight) => (
               <TableRow key={flight.flight_id}>
-                <TableCell>{flight.origin_airport_city}</TableCell>
-                <TableCell>{flight.destination_airport_city}</TableCell>
                 <TableCell>${flight.fare}</TableCell>
+                <TableCell>${flight.fare_low}</TableCell>
+                <TableCell>{flight.passengers}</TableCell>
                 <TableCell>
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => {
-                      localStorage.setItem(
-                        "selectedFlight",
-                        JSON.stringify(flight)
-                      );
-                      onSave(flight);
-                    }}
+                    onClick={() => handleSelect(flight)}
                   >
                     Select
                   </Button>

@@ -21,6 +21,19 @@ const HotelTable = ({
   handleChangeRowsPerPage,
   onSave,
 }) => {
+  const handleSelect = (hotel) => {
+    let selectedHotelIds =
+      JSON.parse(localStorage.getItem("selectedHotelIds")) || [];
+    if (!selectedHotelIds.includes(hotel.hotel_id)) {
+      selectedHotelIds.push(hotel.hotel_id);
+      localStorage.setItem(
+        "selectedHotelIds",
+        JSON.stringify(selectedHotelIds)
+      );
+    }
+    onSave(hotel);
+  };
+
   return (
     <Paper sx={{ width: "50%", margin: "0 auto" }}>
       <TableContainer>
@@ -51,13 +64,7 @@ const HotelTable = ({
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => {
-                      localStorage.setItem(
-                        "selectedHotel",
-                        JSON.stringify(hotel)
-                      );
-                      onSave(hotel);
-                    }}
+                    onClick={() => handleSelect(hotel)}
                   >
                     Select
                   </Button>
