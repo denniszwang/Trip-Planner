@@ -13,10 +13,13 @@ import {
   Paper,
   TablePagination,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import NavBar from "../components/NavBar";
 import PlanDialog from "../components/PlanDialog";
 const config = require("../config.json");
+
+const mapApi = "AIzaSyAAkxzWh-FQW3UkJjQPzonay6kGyEC86Wg";
 
 const Home = () => {
   const [source, setSource] = useState("");
@@ -28,6 +31,13 @@ const Home = () => {
   const [open, setOpen] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const navigate = useNavigate();
+  const [autocompleteSource, setAutocompleteSource] = useState(null);
+  const [autocompleteDestination, setAutocompleteDestination] = useState(null);
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: mapApi,
+    libraries: ["places"],
+  });
 
   useEffect(() => {
     const name = localStorage.getItem("userName");
@@ -91,6 +101,50 @@ const Home = () => {
     return `$${Math.round(cost).toLocaleString()}`;
   };
 
+  const onLoadSource = (autocomplete) => {
+    setAutocompleteSource(autocomplete);
+  };
+
+  const onPlaceChangedSource = () => {
+    if (autocompleteSource !== null) {
+      const place = autocompleteSource.getPlace();
+      if (place.geometry) {
+        const city = place.address_components[0].long_name;
+        setSource(city);
+      } else {
+        console.error("No geometry information for selected place.");
+      }
+    } else {
+      console.error("Autocomplete is not loaded yet!");
+    }
+  };
+
+  const onLoadDestination = (autocomplete) => {
+    setAutocompleteDestination(autocomplete);
+  };
+
+  const onPlaceChangedDestination = () => {
+    if (autocompleteDestination !== null) {
+      const place = autocompleteDestination.getPlace();
+      if (place.geometry) {
+        const city = place.address_components[0].long_name;
+        setDestination(city);
+      } else {
+        console.error("No geometry information for selected place.");
+      }
+    } else {
+      console.error("Autocomplete is not loaded yet!");
+    }
+  };
+
+  if (loadError) {
+    return <div>Error loading maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
       <NavBar />
@@ -111,20 +165,30 @@ const Home = () => {
             alignItems: "center",
           }}
         >
-          <TextField
-            label="Departure City"
-            variant="outlined"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            sx={{ flex: 1 }}
-          />
-          <TextField
-            label="Destination City"
-            variant="outlined"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            sx={{ flex: 1 }}
-          />
+          <Autocomplete
+            onLoad={onLoadSource}
+            onPlaceChanged={onPlaceChangedSource}
+          >
+            <TextField
+              label="Departure City"
+              variant="outlined"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              sx={{ flex: 1 }}
+            />
+          </Autocomplete>
+          <Autocomplete
+            onLoad={onLoadDestination}
+            onPlaceChanged={onPlaceChangedDestination}
+          >
+            <TextField
+              label="Destination City"
+              variant="outlined"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              sx={{ flex: 1 }}
+            />
+          </Autocomplete>
           <Button
             variant="contained"
             color="primary"
