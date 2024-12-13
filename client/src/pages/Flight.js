@@ -161,6 +161,11 @@ const SearchFlights = () => {
     }
   };
 
+  // Go to hotel page
+  const goToHotelPage = () => {
+    window.location.href = "/hotel";
+  };
+
   if (!isLoaded) {
     return <div>Loading...</div>;
   }
@@ -268,6 +273,11 @@ const SearchFlights = () => {
             </Typography>
           )}
         </TabPanel>
+
+        <Button variant="contained" color="primary" onClick={goToHotelPage}>
+          Next
+        </Button>
+
       </Box>
     </div>
   );
