@@ -30,7 +30,7 @@ const generateRandomPlan = async () => {
     const client = await connection.connect();
     try {
         // get random users, batch size set to 100 -> can be adjusted
-        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 100`);
+        const {rows: users} = await client.query(`SELECT email FROM Users ORDER BY RANDOM() LIMIT 10000`);
         if (users.length === 0) {
             console.log("No users found in the database!");
             return;

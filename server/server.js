@@ -23,9 +23,11 @@ app.post("/user", routes.createUser);
 app.post("/user/:id/plan", routes.createPlan);
 app.get("/user/:id/plan", routes.getPlans);
 app.get("/user/:id/plan/:planId", routes.getPlan);
-app.get("/plans/expensive", routes.getExpensivePlans)
-app.get("/plans/longest", routes.getLongestRoutes)
+app.get("/plans/expensive", routes.getExpensivePlans);
+app.get("/plans/longest", routes.getLongestRoutes);
+app.get("/plans/most", routes.getMostTrips);
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
+app.delete("/flight/stats",  routes.getTotalFlightsInfo);
 
 
 app.listen(config.server_port, () => {
