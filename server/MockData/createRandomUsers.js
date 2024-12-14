@@ -10,6 +10,7 @@ const connection = new Pool({
     ssl: { rejectUnauthorized: false },
 });
 
+// adjust mock names as needed
 const firstNames = [
     "John", "Jane", "Alice", "Bob", "Charlie", "Diana", "Edward", "Fiona", "George", "Hannah",
     "Ian", "Julia", "Kevin", "Laura", "Michael", "Nina", "Oscar", "Paul", "Quinn", "Rachel",
@@ -34,6 +35,7 @@ const generateRandomString = (length) => {
 const createRandomUsers = async () => {
     try {
         const users = [];
+        // adjust the number of users as needed
         for (let i = 0; i < 10; i++) {
             const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
