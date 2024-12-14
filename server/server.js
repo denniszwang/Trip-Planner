@@ -10,7 +10,7 @@ app.use(
   })
 );
 
-app.use(express.json())
+app.use(express.json());
 
 app.get("/flight/:source/:destination", routes.getFlights);
 app.get("/flight/:source/:destination/popular", routes.getPopularFlights);
@@ -23,13 +23,12 @@ app.post("/user", routes.createUser);
 app.post("/user/:id/plan", routes.createPlan);
 app.get("/user/:id/plan", routes.getPlans);
 app.get("/user/:id/plan/:planId", routes.getPlan);
-app.get("/plans/expensive", routes.getExpensivePlans);
-app.get("/plans/longest", routes.getLongestRoutes);
-app.get("/plans/most", routes.getMostTrips);
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
-app.get("/plan/most/ExpensivePlan",  routes.getMostExpensivePlan);
-app.get("/flight/stats",  routes.getTotalFlightsInfo);
-
+app.get("/plans/expensive", routes.getExpensivePlans);
+app.get("/plans/expensive/most", routes.getMostExpensivePlan);
+app.get("/plans/longest", routes.getLongestRoutes);
+app.get("/plans/stats", routes.getMostTrips);
+app.get("/flight/stats", routes.getTotalFlightsInfo);
 
 app.listen(config.server_port, () => {
   console.log(

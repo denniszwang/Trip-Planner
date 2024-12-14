@@ -45,7 +45,7 @@ const Plans = () => {
   };
 
   const fetchTopUsers = async () => {
-    let url = `http://${config.server_host}:${config.server_port}/plans/most`;
+    let url = `http://${config.server_host}:${config.server_port}/plans/stats`;
     const response = await fetch(url);
     const data = await response.json();
     setTopUsers(data.data);
