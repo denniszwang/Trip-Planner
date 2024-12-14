@@ -600,6 +600,7 @@ const getMostTrips = async (req, res) => {
     try {
         const query = `
         SELECT
+        u.email,
         u.name,
         COUNT(DISTINCT tp.plan_id) as total_trips,
         SUM(tp.total_cost) as total_spent,

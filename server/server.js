@@ -27,7 +27,7 @@ app.get("/plans/expensive", routes.getExpensivePlans);
 app.get("/plans/longest", routes.getLongestRoutes);
 app.get("/plans/most", routes.getMostTrips);
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
-app.delete("/flight/stats",  routes.getTotalFlightsInfo);
+app.get("/flight/stats",  routes.getTotalFlightsInfo);
 
 
 app.listen(config.server_port, () => {
