@@ -19,6 +19,7 @@ const config = require("../config.json");
 const Plans = () => {
   const [plans, setExpensivePlans] = useState([]);
   const [trips, setLongestTrips] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -26,6 +27,7 @@ const Plans = () => {
   useEffect(() => {
     fetchExpensivePlans();
     fetchLongestTrips();
+    fetchTopUsers();
   }, []);
 
   const fetchExpensivePlans = async () => {
@@ -40,6 +42,13 @@ const Plans = () => {
     const response = await fetch(url);
     const data = await response.json();
     setLongestTrips(data.itineraries);
+  };
+
+  const fetchTopUsers = async () => {
+    let url = `http://${config.server_host}:${config.server_port}/plans/most`;
+    const response = await fetch(url);
+    const data = await response.json();
+    setTopUsers(data.data);
   };
 
   const handleTabChange = (event, newValue) => {
@@ -81,11 +90,56 @@ const Plans = () => {
           indicatorColor="primary"
           centered
         >
+          <Tab label="Top Users" />
           <Tab label="Expensive Plans" />
           <Tab label="Longest Trips" />
         </Tabs>
       </AppBar>
       <TabPanel value={activeTab} index={0}>
+        <TableContainer
+          component={Paper}
+          sx={{ width: "50%", margin: "-20px auto" }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>User Name</TableCell>
+                <TableCell>Total Trips</TableCell>
+                <TableCell>Total Spent</TableCell>
+                <TableCell>Avg Flight Cost</TableCell>
+                <TableCell>Avg Trip Distance</TableCell>
+                <TableCell>Hotels Stayed</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {topUsers
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((user, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.total_trips}</TableCell>
+                    <TableCell>${formatNumber(user.total_spent)}</TableCell>
+                    <TableCell>${formatNumber(user.avg_flight_cost)}</TableCell>
+                    <TableCell>
+                      {formatNumber(user.avg_trip_distance)} miles
+                    </TableCell>
+                    <TableCell>{user.different_hotels_stayed}</TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={topUsers.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </TableContainer>
+      </TabPanel>
+      <TabPanel value={activeTab} index={1}>
         <TableContainer
           component={Paper}
           sx={{ width: "50%", margin: "-20px auto" }}
@@ -127,7 +181,7 @@ const Plans = () => {
           />
         </TableContainer>
       </TabPanel>
-      <TabPanel value={activeTab} index={1}>
+      <TabPanel value={activeTab} index={2}>
         <TableContainer
           component={Paper}
           sx={{ width: "50%", margin: "-20px auto" }}
