@@ -594,14 +594,15 @@ const getLongestRoutes = async (req, res) => {
         res.status(500).json({ error: "Internal server error!!!" });
     }
 };
-// // Route 15: GET /plans/most
-// // Get users with their travel statistics, filtered by minimum trip count
+// Route 15: GET /plans/most
+// Get users with their travel statistics, filtered by minimum trip count
 const getMostTrips = async (req, res) => {
     try {
         const query = `
         SELECT
         u.email,
         u.name,
+        u.email,
         COUNT(DISTINCT tp.plan_id) as total_trips,
         SUM(tp.total_cost) as total_spent,
         ROUND(AVG(f.fare), 2) as avg_flight_cost,
@@ -645,54 +646,91 @@ const getMostTrips = async (req, res) => {
     }
 };
 
-// // Route 16: GET /flight/totalFlights
-// // Get users with their travel statistics, filtered by minimum trip count
+// Route 16: GET /plans/expensive/most
+// Get most expensive plans
+const getMostExpensivePlan = async (req, res) => {
+    try {
+        const query = `
+        WITH max_cost AS (
+    SELECT MAX(total_cost) as max_total_cost
+    FROM travelplan
+)
+    SELECT
+        tp.plan_id,
+        tp.total_cost,
+        u.name AS user_name,
+        u.email AS user_email,
+        STRING_AGG(DISTINCT f.origin_airport_city || ', ' || f.destination_airport_city, ', ') AS cities_visited,
+        STRING_AGG(DISTINCT h.hotel_name, ', ') AS hotels_stayed,
+        STRING_AGG(DISTINCT f.carrier_lg, ', ') AS airlines_used,
+        COUNT(DISTINCT ftp.flight_id) AS total_flights,
+        COUNT(DISTINCT htp.hotel_id) AS total_hotels
+    FROM TravelPlan tp
+    JOIN Users u ON tp.user_email = u.email
+    LEFT JOIN FlightTravelPlan ftp ON tp.plan_id = ftp.plan_id
+    LEFT JOIN Flight f ON ftp.flight_id = f.flight_id
+    LEFT JOIN HotelTravelPlan htp ON tp.plan_id = htp.plan_id
+    LEFT JOIN Hotel h ON htp.hotel_id = h.hotel_id
+    JOIN max_cost mc ON tp.total_cost = mc.max_total_cost
+    GROUP BY tp.plan_id, u.name, u.email
+    ORDER BY tp.total_cost DESC;
+        `;
+
+        const { rows:mostpExpensiveplan } = await connection.query(query);
+
+        if (mostpExpensiveplan.length === 0) {
+            return res.status(404).json({ error: "No travel plans found." });
+        }
+
+        res.status(200).json({ mostpExpensiveplan });
+    } catch (error) {
+        console.error("Error in getExpensiveTravelPlans:", error);
+        res.status(500).json({ error: "Internal server error!!!" });
+    }
+}
+
+// Route 17: GET /flight/stats
+// Get users with their travel statistics, filtered by minimum trip count
 const getTotalFlightsInfo = async (req, res) => {
     try {
         const query = `
         WITH RouteStats AS (
-        SELECT
-            origin_airport_city,
-            destination_airport_city,
-            carrier_lg,
-            carrier_low,
-            fare,
-            MAX(fare) OVER (PARTITION BY origin_airport_city, destination_airport_city) as highest_fare,
-            passengers,
-            distance_miles
-        FROM Flight f1
-        -- Remove CROSS JOIN and replace with a more efficient way to filter fares
-        WHERE EXISTS (
-            SELECT 1
-            FROM Flight f2
-            WHERE f2.origin_airport_city = f1.origin_airport_city
-            AND f2.destination_airport_city = f1.destination_airport_city
-            AND f1.fare BETWEEN f2.fare * 0.5 AND f2.fare * 1.5
-        )
+            SELECT
+                origin_airport_city,
+                destination_airport_city,
+                carrier_lg,
+                carrier_low,
+                fare,
+                MAX(fare) OVER (PARTITION BY origin_airport_city, destination_airport_city) as highest_fare,
+                passengers,
+                distance_miles
+            FROM Flight f1
+            WHERE EXISTS (
+                SELECT 1
+                FROM Flight f2
+                WHERE f2.origin_airport_city = f1.origin_airport_city
+                AND f2.destination_airport_city = f1.destination_airport_city
+                AND f1.fare BETWEEN f2.fare * 0.5 AND f2.fare * 1.5
+            )
         ),
         CarrierMetrics AS (
             SELECT
-            origin_airport_city,
-            destination_airport_city,
-            STRING_AGG(DISTINCT carrier_lg, ', ') as major_carriers,
-            STRING_AGG(DISTINCT carrier_low, ', ') as budget_carriers,
-            COUNT(*) as total_flights,
-            ROUND(AVG(fare), 2) as avg_fare,
-            ROUND(MAX(highest_fare), 2) as route_highest_fare,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fare) as median_fare,
-            ROUND(AVG(passengers), 2) as avg_passengers,
-            ROUND(AVG(distance_miles), 2) as avg_distance
-        FROM RouteStats
-        GROUP BY origin_airport_city, destination_airport_city
-    ),
-    AvgFlights AS (
-        SELECT AVG(total_flights) as avg_total_flights
+                origin_airport_city,
+                destination_airport_city,
+                STRING_AGG(DISTINCT carrier_lg, ', ') as major_carriers,
+                STRING_AGG(DISTINCT carrier_low, ', ') as budget_carriers,
+                COUNT(*) as total_flights,
+                ROUND(AVG(fare), 2) as avg_fare,
+                ROUND(MAX(highest_fare), 2) as route_highest_fare,
+                PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY fare) as median_fare,
+                ROUND(AVG(passengers), 2) as avg_passengers,
+                ROUND(AVG(distance_miles), 2) as avg_distance
+            FROM RouteStats
+            GROUP BY origin_airport_city, destination_airport_city
+        )
+        SELECT *
         FROM CarrierMetrics
-    )
-    SELECT cm.*
-    FROM CarrierMetrics cm, AvgFlights af
-    WHERE cm.total_flights > af.avg_total_flights
-    ORDER BY cm.total_flights DESC;
+        ORDER BY total_flights DESC;
         `;
 
         const { rows: flightStats } = await connection.query(query);
@@ -700,7 +738,7 @@ const getTotalFlightsInfo = async (req, res) => {
         if (flightStats.length === 0) {
             return res.status(404).json({
                 status: 'error',
-                message: "No routes found with above-average flight frequency."
+                message: "No flight statistics found."
             });
         }
 
@@ -708,8 +746,7 @@ const getTotalFlightsInfo = async (req, res) => {
             status: 'success',
             data: flightStats,
             metadata: {
-                count: flightStats.length,
-                averageFlightsPerRoute: parseFloat(flightStats[0].route_average).toFixed(2)
+                count: flightStats.length
             }
         });
 
@@ -722,7 +759,6 @@ const getTotalFlightsInfo = async (req, res) => {
         });
     }
 };
-
 
 module.exports = {
     getFlights,
@@ -740,6 +776,7 @@ module.exports = {
     getLongestRoutes,
     deletePlan,
     getMostTrips,
-    getTotalFlightsInfo
+    getTotalFlightsInfo,
+    getMostExpensivePlan
 };
 
