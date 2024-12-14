@@ -193,25 +193,22 @@ const SearchHotel = () => {
   };
 
   const createPlan = async () => {
-    const userEmail = localStorage.getItem("email");
+    const userEmail = localStorage.getItem("userEmail");
+    const selectedFlights = localStorage.getItem("selectedFlightIds")
+      ? JSON.parse(localStorage.getItem("selectedFlightIds"))
+      : [];
+    const selectedHotels = localStorage.getItem("selectedHotelIds")
+      ? JSON.parse(localStorage.getItem("selectedHotelIds"))
+      : [];
 
-    if (
-      !userEmail ||
-      selectedHotels.length === 0 ||
-      selectedFlights.length === 0
-    ) {
+    if (!userEmail || selectedHotels.length === 0 || selectedFlights.length === 0) {
       alert("Please select at least one hotel and flight to create a plan.");
       return;
     }
 
-    const totalCost =
-      selectedHotels.reduce((acc, hotel) => acc + hotel.price, 0) +
-      selectedFlights.reduce((acc, flight) => acc + flight.price, 0);
-
     const planData = {
-      total_cost: totalCost,
-      hotels: selectedHotels.map((hotel) => hotel.id),
-      flights: selectedFlights.map((flight) => flight.id),
+      hotels: selectedHotels,
+      flights: selectedFlights
     };
 
     try {
@@ -227,8 +224,13 @@ const SearchHotel = () => {
       );
 
       const data = await response.json();
+
       if (response.ok) {
         alert("Plan created successfully!");
+
+        // Clear localStorage after successful plan creation
+        localStorage.removeItem("selectedFlightIds");
+        localStorage.removeItem("selectedHotelIds");
       } else {
         alert(`Error creating plan: ${data.error}`);
       }
