@@ -166,7 +166,9 @@ const Home = () => {
           gutterBottom
           sx={{ mt: 7, mb: 2, textAlign: "left" }}
         >
-          Welcome to Trip Planner, {user.name.split(" ")[0]}
+          {user.name
+            ? `Welcome to Trip Planner, ${user.name.split(" ")[0]}`
+            : "Welcome to Trip Planner"}
         </Typography>
         <Box
           sx={{

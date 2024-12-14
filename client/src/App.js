@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Flight from "./pages/Flight";
@@ -6,6 +7,10 @@ import Plan from "./pages/Plan";
 import Home from "./pages/Home";
 
 export default function App() {
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
+
   return (
     <div>
       <BrowserRouter>

@@ -63,6 +63,11 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    onClose();
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -168,6 +173,9 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
       <DialogActions>
         <Button onClick={handleDelete} color="error">
           Delete Plan
+        </Button>
+        <Button onClick={handleLogout} color="secondary">
+          Log Out
         </Button>
         <Button onClick={onClose} color="primary">
           Close
