@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -21,16 +21,25 @@ const HotelTable = ({
   handleChangeRowsPerPage,
   onSave,
 }) => {
+  const [selectedHotels, setSelectedHotels] = useState([]);
+
+  useEffect(() => {
+    const selectedHotelIds =
+      JSON.parse(localStorage.getItem("selectedHotelIds")) || [];
+    setSelectedHotels(selectedHotelIds);
+  }, []);
+
   const handleSelect = (hotel) => {
     let selectedHotelIds =
       JSON.parse(localStorage.getItem("selectedHotelIds")) || [];
-    if (!selectedHotelIds.includes(hotel.hotel_id)) {
+    if (selectedHotelIds.includes(hotel.hotel_id)) {
+      selectedHotelIds = selectedHotelIds.filter((id) => id !== hotel.hotel_id);
+      setSelectedHotels((prev) => prev.filter((id) => id !== hotel.hotel_id));
+    } else {
       selectedHotelIds.push(hotel.hotel_id);
-      localStorage.setItem(
-        "selectedHotelIds",
-        JSON.stringify(selectedHotelIds)
-      );
+      setSelectedHotels((prev) => [...prev, hotel.hotel_id]);
     }
+    localStorage.setItem("selectedHotelIds", JSON.stringify(selectedHotelIds));
     onSave(hotel);
   };
 
@@ -63,10 +72,16 @@ const HotelTable = ({
                 <TableCell>
                   <Button
                     variant="contained"
-                    color="primary"
+                    color={
+                      selectedHotels.includes(hotel.hotel_id)
+                        ? "secondary"
+                        : "primary"
+                    }
                     onClick={() => handleSelect(hotel)}
                   >
-                    Select
+                    {selectedHotels.includes(hotel.hotel_id)
+                      ? "Unselect"
+                      : "Select"}
                   </Button>
                 </TableCell>
               </TableRow>

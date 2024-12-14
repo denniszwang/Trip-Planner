@@ -33,7 +33,7 @@ const SearchFlights = () => {
   const sourceRef = useRef(null);
   const destinationRef = useRef(null);
 
-  const [savedFlights, setSavedFlights] = useState([]); // Keep track of the saved flights
+  const [savedFlights, setSavedFlights] = useState([]);
 
   useEffect(() => {
     const storedSourceCity = localStorage.getItem("departureCity");
@@ -102,7 +102,6 @@ const SearchFlights = () => {
         : destinationRef.current.getPlace();
 
     if (place && place.address_components) {
-      // Extract the city name from the address components
       const cityComponent = place.address_components.find((component) =>
         component.types.includes("locality")
       );
@@ -236,6 +235,15 @@ const SearchFlights = () => {
           >
             Search Flights
           </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={goToHotelPage}
+            sx={{ flex: 1, height: "56px", whiteSpace: "nowrap" }}
+          >
+            Book Hotel
+          </Button>
         </Box>
         <AppBar position="static" color="default">
           <Tabs
@@ -283,11 +291,6 @@ const SearchFlights = () => {
             </Typography>
           )}
         </TabPanel>
-
-        <Button variant="contained" color="primary" onClick={goToHotelPage}>
-          Next: Hotel
-        </Button>
-
       </Box>
     </div>
   );

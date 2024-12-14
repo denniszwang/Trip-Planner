@@ -9,6 +9,7 @@ import {
 import { AppBar, Tabs, Tab, Button, Box, Typography } from "@mui/material";
 import NavBar from "../components/NavBar";
 import Table from "../components/Table";
+import PlanDialog from "../components/PlanSaved";
 const config = require("../config.json");
 const containerStyle = {
   width: "50%",
@@ -38,7 +39,8 @@ const SearchHotel = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const [selectedHotels, setSelectedHotels] = useState([]);
-  const [selectedFlights, setSelectedFlights] = useState([]);
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [createdPlanId, setCreatedPlanId] = useState(null);
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -201,14 +203,18 @@ const SearchHotel = () => {
       ? JSON.parse(localStorage.getItem("selectedHotelIds"))
       : [];
 
-    if (!userEmail || selectedHotels.length === 0 || selectedFlights.length === 0) {
+    if (
+      !userEmail ||
+      selectedHotels.length === 0 ||
+      selectedFlights.length === 0
+    ) {
       alert("Please select at least one hotel and flight to create a plan.");
       return;
     }
 
     const planData = {
       hotels: selectedHotels,
-      flights: selectedFlights
+      flights: selectedFlights,
     };
 
     try {
@@ -223,15 +229,17 @@ const SearchHotel = () => {
         }
       );
 
-      const data = await response.json();
-
       if (response.ok) {
-        alert("Plan created successfully!");
+        const plansResponse = await fetch(
+          `http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`
+        );
+        const plansData = await plansResponse.json();
+        const newPlanId = plansData.plans[0].plan_id;
 
-        // Clear localStorage after successful plan creation
-        localStorage.removeItem("selectedFlightIds");
-        localStorage.removeItem("selectedHotelIds");
+        setCreatedPlanId(newPlanId);
+        setPlanDialogOpen(true);
       } else {
+        const data = await response.json();
         alert(`Error creating plan: ${data.error}`);
       }
     } catch (error) {
@@ -365,6 +373,12 @@ const SearchHotel = () => {
       <GoogleMap mapContainerStyle={containerStyle} center={location} zoom={12}>
         <Marker position={location} />
       </GoogleMap>
+
+      <PlanDialog
+        open={planDialogOpen}
+        onClose={() => setPlanDialogOpen(false)}
+        planId={createdPlanId}
+      />
     </div>
   );
 };

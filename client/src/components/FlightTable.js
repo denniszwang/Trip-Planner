@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -21,16 +21,32 @@ const FlightTable = ({
   handleChangeRowsPerPage,
   onSave,
 }) => {
+  const [selectedFlights, setSelectedFlights] = useState([]);
+
+  useEffect(() => {
+    const selectedFlightIds =
+      JSON.parse(localStorage.getItem("selectedFlightIds")) || [];
+    setSelectedFlights(selectedFlightIds);
+  }, []);
+
   const handleSelect = (flight) => {
     let selectedFlightIds =
       JSON.parse(localStorage.getItem("selectedFlightIds")) || [];
-    if (!selectedFlightIds.includes(flight.flight_id)) {
-      selectedFlightIds.push(flight.flight_id);
-      localStorage.setItem(
-        "selectedFlightIds",
-        JSON.stringify(selectedFlightIds)
+    if (selectedFlightIds.includes(flight.flight_id)) {
+      selectedFlightIds = selectedFlightIds.filter(
+        (id) => id !== flight.flight_id
       );
+      setSelectedFlights((prev) =>
+        prev.filter((id) => id !== flight.flight_id)
+      );
+    } else {
+      selectedFlightIds.push(flight.flight_id);
+      setSelectedFlights((prev) => [...prev, flight.flight_id]);
     }
+    localStorage.setItem(
+      "selectedFlightIds",
+      JSON.stringify(selectedFlightIds)
+    );
     onSave(flight);
   };
 
@@ -59,10 +75,16 @@ const FlightTable = ({
                 <TableCell>
                   <Button
                     variant="contained"
-                    color="primary"
+                    color={
+                      selectedFlights.includes(flight.flight_id)
+                        ? "secondary"
+                        : "primary"
+                    }
                     onClick={() => handleSelect(flight)}
                   >
-                    Select
+                    {selectedFlights.includes(flight.flight_id)
+                      ? "Unselect"
+                      : "Select"}
                   </Button>
                 </TableCell>
               </TableRow>
