@@ -27,6 +27,7 @@ app.get("/plans/expensive", routes.getExpensivePlans);
 app.get("/plans/longest", routes.getLongestRoutes);
 app.get("/plans/most", routes.getMostTrips);
 app.delete("/user/:id/plan/:planId", routes.deletePlan);
+app.get("/plan/most/ExpensivePlan",  routes.getMostExpensivePlan);
 app.get("/flight/stats",  routes.getTotalFlightsInfo);
 
 
