@@ -57,7 +57,7 @@ const Home = () => {
       const fetchPlans = async () => {
         try {
           const response = await fetch(
-            `http://${config.server_host}:${config.server_port}/user/${user.email}/plan`
+            `${config.server_host}/user/${user.email}/plan`
           );
           const data = await response.json();
           setPlans(data.plans);

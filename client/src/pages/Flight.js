@@ -144,7 +144,7 @@ const SearchFlights = () => {
     page = 0,
     limit = rowsPerPage
   ) => {
-    let url = `http://${config.server_host}:${config.server_port}/flight/${source}/${destination}`;
+    let url = `${config.server_host}/flight/${source}/${destination}`;
     if (type === "popular") {
       url += "/popular";
     } else if (type === "average") {
@@ -174,7 +174,7 @@ const SearchFlights = () => {
   };
 
   const fetchFlightStats = async (source, destination) => {
-    const url = `http://${config.server_host}:${config.server_port}/flight/stats`;
+    const url = `${config.server_host}/flight/stats`;
     try {
       const response = await fetch(url);
       const data = await response.json();

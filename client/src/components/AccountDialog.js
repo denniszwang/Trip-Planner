@@ -21,7 +21,7 @@ const AccountDialog = ({ open, onClose }) => {
 
     try {
       const response = await fetch(
-        `http://${config.server_host}:${config.server_port}/user`,
+        `${config.server_host}/user`,
         {
           method: "POST",
           headers: {

@@ -118,7 +118,7 @@ const SearchHotel = () => {
   };
 
   const fetchHotels = async (city, type, page = 0, rowsPerPage = 5) => {
-    let url = `http://${config.server_host}:${config.server_port}/hotel/${city}`;
+    let url = `${config.server_host}/hotel/${city}`;
     if (type === "popular") {
       url += "/popular";
     } else if (type === "average") {
@@ -219,7 +219,7 @@ const SearchHotel = () => {
 
     try {
       const response = await fetch(
-        `http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`,
+        `${config.server_host}/user/${userEmail}/plan`,
         {
           method: "POST",
           headers: {
@@ -231,7 +231,7 @@ const SearchHotel = () => {
 
       if (response.ok) {
         const plansResponse = await fetch(
-          `http://${config.server_host}:${config.server_port}/user/${userEmail}/plan`
+          `${config.server_host}/user/${userEmail}/plan`
         );
         const plansData = await plansResponse.json();
         const newPlanId = plansData.plans[0].plan_id;

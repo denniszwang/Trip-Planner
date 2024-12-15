@@ -31,21 +31,21 @@ const Plans = () => {
   }, []);
 
   const fetchExpensivePlans = async () => {
-    let url = `http://${config.server_host}:${config.server_port}/plans/expensive`;
+    let url = `${config.server_host}/plans/expensive`;
     const response = await fetch(url);
     const data = await response.json();
     setExpensivePlans(data.plans);
   };
 
   const fetchLongestTrips = async () => {
-    let url = `http://${config.server_host}:${config.server_port}/plans/longest`;
+    let url = `${config.server_host}/plans/longest`;
     const response = await fetch(url);
     const data = await response.json();
     setLongestTrips(data.itineraries);
   };
 
   const fetchTopUsers = async () => {
-    let url = `http://${config.server_host}:${config.server_port}/plans/stats`;
+    let url = `${config.server_host}/plans/stats`;
     const response = await fetch(url);
     const data = await response.json();
     setTopUsers(data.data);

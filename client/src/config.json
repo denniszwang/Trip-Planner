@@ -1,4 +1,3 @@
 {
-  "server_host": "localhost",
-  "server_port": "8080"
+  "server_host": " https://cis550-trip-planner-570957fbddff.herokuapp.com"
 }

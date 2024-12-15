@@ -30,7 +30,7 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
         try {
           const email = localStorage.getItem("userEmail");
           const response = await fetch(
-            `http://${config.server_host}:${config.server_port}/user/${email}/plan/${planId}`
+            `${config.server_host}/user/${email}/plan/${planId}`
           );
           const data = await response.json();
           setPlanDetails(data.plan[0]);
@@ -49,7 +49,7 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
     try {
       const email = localStorage.getItem("userEmail");
       const response = await fetch(
-        `http://${config.server_host}:${config.server_port}/user/${email}/plan/${planId}`,
+        `${config.server_host}/user/${email}/plan/${planId}`,
         { method: "DELETE" }
       );
       if (response.ok) {

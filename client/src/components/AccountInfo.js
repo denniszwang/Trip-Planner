@@ -18,7 +18,7 @@ const AccountInfo = ({ open, onClose, email }) => {
     const fetchUserInfo = async () => {
       try {
         const response = await fetch(
-          `http://${config.server_host}:${config.server_port}/user/${email}`,
+          `${config.server_host}/user/${email}`,
           {
             method: "GET",
             headers: {
