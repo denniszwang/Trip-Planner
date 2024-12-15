@@ -312,7 +312,7 @@ const SearchFlights = () => {
                       Median Fare:
                     </Typography>
                     <Typography variant="subtitle1" color="primary">
-                      ${flightStats.median_fare}
+                      ${Math.round(flightStats.median_fare)}
                     </Typography>
                   </Box>
                 </Grid>
