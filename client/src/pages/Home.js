@@ -106,7 +106,9 @@ const Home = () => {
   };
 
   const formatCities = (cities) => {
-    return cities.map((city) => city.split(",")[0]).join(", ");
+    return Array.from(new Set(cities.map((city) => city.split(",")[0]))).join(
+      ", "
+    );
   };
 
   const formatCost = (cost) => {

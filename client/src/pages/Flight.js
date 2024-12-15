@@ -121,19 +121,22 @@ const SearchFlights = () => {
   };
 
   const handleSearch = () => {
-    setSource(inputSource);
-    setDestination(inputDestination);
+    const formattedSource = inputSource.split(" (")[0];
+    const formattedDestination = inputDestination.split(" (")[0];
+
+    setSource(formattedSource);
+    setDestination(formattedDestination);
 
     // Update local storage with the new city names
-    localStorage.setItem("departureCity", inputSource);
-    localStorage.setItem("destinationCity", inputDestination);
+    localStorage.setItem("departureCity", formattedSource);
+    localStorage.setItem("destinationCity", formattedDestination);
 
     fetchFlights(
-      inputSource,
-      inputDestination,
+      formattedSource,
+      formattedDestination,
       tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all"
     );
-    fetchFlightStats(inputSource, inputDestination); // Fetch flight statistics
+    fetchFlightStats(formattedSource, formattedDestination); // Fetch flight statistics
   };
 
   // Fetch flights

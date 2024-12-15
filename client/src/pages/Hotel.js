@@ -244,6 +244,10 @@ const SearchHotel = () => {
 
         setCreatedPlanId(newPlanId);
         setPlanDialogOpen(true);
+
+        // Clear local storage after successfully creating a plan
+        localStorage.removeItem("selectedFlightIds");
+        localStorage.removeItem("selectedHotelIds");
       } else {
         const data = await response.json();
         alert(`Error creating plan: ${data.error}`);

@@ -5,6 +5,7 @@ import {
   Tabs,
   Tab,
   Box,
+  Button,
   Table,
   TableBody,
   TableCell,
@@ -13,7 +14,10 @@ import {
   TableRow,
   Paper,
   TablePagination,
+  Typography,
 } from "@mui/material";
+import UserPlansDialog from "../components/UserPlanDialog";
+import AddPlanDialog from "../components/AddPlanDialog";
 const config = require("../config.json");
 
 const Plans = () => {
@@ -23,6 +27,13 @@ const Plans = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserName, setSelectedUserName] = useState("");
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
+  const [addPlanDialogOpen, setAddPlanDialogOpen] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedPlanEmail, setSelectedPlanEmail] = useState(null);
 
   useEffect(() => {
     fetchExpensivePlans();
@@ -75,6 +86,32 @@ const Plans = () => {
     return Math.round(number).toLocaleString();
   };
 
+  const handleUserClick = (userId, userName, userEmail) => {
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setSelectedUserEmail(userEmail);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedUserId(null);
+    setSelectedUserName("");
+    setSelectedUserEmail("");
+  };
+
+  const handlePlanClick = (planId, email) => {
+    setSelectedPlanId(planId);
+    setSelectedPlanEmail(email);
+    setAddPlanDialogOpen(true);
+  };
+
+  const handleCloseAddPlanDialog = () => {
+    setAddPlanDialogOpen(false);
+    setSelectedPlanId(null);
+    setSelectedPlanEmail(null);
+  };
+
   return (
     <div>
       <NavBar />
@@ -116,7 +153,15 @@ const Plans = () => {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((user, index) => (
                   <TableRow key={index}>
-                    <TableCell>{user.name}</TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() =>
+                          handleUserClick(user.email, user.name, user.email)
+                        }
+                      >
+                        <Typography noWrap>{user.name}</Typography>
+                      </Button>
+                    </TableCell>
                     <TableCell>{user.total_trips}</TableCell>
                     <TableCell>${formatNumber(user.total_spent)}</TableCell>
                     <TableCell>${formatNumber(user.avg_flight_cost)}</TableCell>
@@ -159,7 +204,15 @@ const Plans = () => {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((plan) => (
                   <TableRow key={plan.plan_id}>
-                    <TableCell>{plan.user_name}</TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() =>
+                          handlePlanClick(plan.plan_id, plan.user_email)
+                        }
+                      >
+                        <Typography noWrap>{plan.user_name}</Typography>
+                      </Button>
+                    </TableCell>
                     <TableCell>
                       {extractCityNames(plan.cities_visited)}
                     </TableCell>
@@ -199,7 +252,15 @@ const Plans = () => {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((trip) => (
                   <TableRow key={trip.plan_id}>
-                    <TableCell>{trip.user_name}</TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() =>
+                          handlePlanClick(trip.plan_id, trip.user_email)
+                        }
+                      >
+                        <Typography noWrap>{trip.user_name}</Typography>
+                      </Button>
+                    </TableCell>
                     <TableCell>
                       {extractCityNames(trip.cities_visited)}
                     </TableCell>
@@ -221,6 +282,19 @@ const Plans = () => {
           />
         </TableContainer>
       </TabPanel>
+      <UserPlansDialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        userId={selectedUserId}
+        userName={selectedUserName}
+        userEmail={selectedUserEmail}
+      />
+      <AddPlanDialog
+        open={addPlanDialogOpen}
+        onClose={handleCloseAddPlanDialog}
+        planId={selectedPlanId}
+        email={selectedPlanEmail}
+      />
     </div>
   );
 };
