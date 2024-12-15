@@ -203,12 +203,18 @@ const SearchHotel = () => {
       ? JSON.parse(localStorage.getItem("selectedHotelIds"))
       : [];
 
-    if (
-      !userEmail ||
-      selectedHotels.length === 0 ||
-      selectedFlights.length === 0
-    ) {
-      alert("Please select at least one hotel and flight to create a plan.");
+    if (!userEmail) {
+      alert("Please login to create a plan.");
+      return;
+    }
+
+    if (selectedHotels.length === 0) {
+      alert("Please select at least one hotel to create a plan.");
+      return;
+    }
+
+    if (selectedFlights.length === 0) {
+      alert("Please select at least one flight to create a plan.");
       return;
     }
 

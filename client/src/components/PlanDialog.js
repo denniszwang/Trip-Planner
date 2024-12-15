@@ -174,9 +174,6 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
         <Button onClick={handleDelete} color="error">
           Delete Plan
         </Button>
-        <Button onClick={handleLogout} color="secondary">
-          Log Out
-        </Button>
         <Button onClick={onClose} color="primary">
           Close
         </Button>
