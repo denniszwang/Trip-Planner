@@ -11,6 +11,8 @@ import {
   CardContent,
   Box,
   Link,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import FlightIcon from "@mui/icons-material/Flight";
 import StarIcon from "@mui/icons-material/Star";
@@ -21,6 +23,7 @@ const AddPlanDialog = ({ open, onClose, planId, email }) => {
   const [planDetails, setPlanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     if (open && planId && email) {
@@ -50,6 +53,48 @@ const AddPlanDialog = ({ open, onClose, planId, email }) => {
       fetchPlanDetails();
     }
   }, [open, planId, email]);
+
+  const handleAddPlan = async () => {
+    if (planDetails) {
+      const userEmail = localStorage.getItem("userEmail");
+      const planData = {
+        hotels: planDetails.hotels.map((hotel) => hotel.hotel_id),
+        flights: planDetails.flights.map((flight) => flight.flight_id),
+      };
+
+      const apiUrl = `${config.server_host}/user/${userEmail}/plan`;
+      console.log("Posting to API:", apiUrl);
+      console.log("Request body:", JSON.stringify(planData));
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(planData),
+        });
+
+        const responseData = await response.json();
+        console.log("Response data:", responseData);
+
+        if (response.ok) {
+          console.log("Plan added successfully");
+          setSnackbarOpen(true);
+          setTimeout(() => {
+            setSnackbarOpen(false);
+            onClose();
+          }, 1500);
+        } else {
+          console.error("Failed to add plan:", responseData);
+          setError(`Failed to add plan: ${responseData.error}`);
+        }
+      } catch (err) {
+        console.error("Error adding plan:", err);
+        setError("Error adding plan");
+      }
+    }
+  };
 
   const renderStars = (rating) => {
     const stars = [];
@@ -154,10 +199,23 @@ const AddPlanDialog = ({ open, onClose, planId, email }) => {
         )}
       </DialogContent>
       <DialogActions>
+        <Button onClick={handleAddPlan} color="primary">
+          Add to My Plans
+        </Button>
         <Button onClick={onClose} color="secondary">
           Close
         </Button>
       </DialogActions>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+          Plan added successfully!
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 };
