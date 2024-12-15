@@ -5,16 +5,16 @@ const routes = require("./routes");
 
 const app = express();
 app.use(
-    cors({
-        origin: "*",
-    })
+  cors({
+    origin: "*",
+  })
 );
 
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.send("Welcome to Travel API");
-} );
+  res.send("Welcome to Travel API");
+});
 
 app.get("/flight/:source/:destination", routes.getFlights);
 app.get("/flight/:source/:destination/popular", routes.getPopularFlights);
@@ -34,11 +34,10 @@ app.get("/plans/longest", routes.getLongestRoutes);
 app.get("/plans/stats", routes.getMostTrips);
 app.get("/flight/stats", routes.getTotalFlightsInfo);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
-
 
 module.exports = app;
