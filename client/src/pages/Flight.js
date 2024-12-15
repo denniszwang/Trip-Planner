@@ -8,6 +8,9 @@ import {
   Button,
   Box,
   Typography,
+  Card,
+  CardContent,
+  Grid,
 } from "@mui/material";
 import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
 import NavBar from "../components/NavBar";
@@ -27,6 +30,7 @@ const SearchFlights = () => {
   const [popularFlights, setPopularFlights] = useState([]);
   const [totalFlights, setTotalFlights] = useState(0);
   const [error, setError] = useState(null);
+  const [flightStats, setFlightStats] = useState(null);
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -55,6 +59,7 @@ const SearchFlights = () => {
         0,
         rowsPerPage
       );
+      fetchFlightStats(storedSourceCity, storedDestinationCity);
     }
   }, [rowsPerPage]);
 
@@ -118,11 +123,17 @@ const SearchFlights = () => {
   const handleSearch = () => {
     setSource(inputSource);
     setDestination(inputDestination);
+
+    // Update local storage with the new city names
+    localStorage.setItem("departureCity", inputSource);
+    localStorage.setItem("destinationCity", inputDestination);
+
     fetchFlights(
       inputSource,
       inputDestination,
       tabIndex === 1 ? "popular" : tabIndex === 2 ? "average" : "all"
     );
+    fetchFlightStats(inputSource, inputDestination); // Fetch flight statistics
   };
 
   // Fetch flights
@@ -159,6 +170,24 @@ const SearchFlights = () => {
     } catch (error) {
       setError("Failed to fetch flights.");
       console.error("Error fetching flights: ", error);
+    }
+  };
+
+  const fetchFlightStats = async (source, destination) => {
+    const url = `http://${config.server_host}:${config.server_port}/flight/stats`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log("Fetched Stats Data:", data);
+
+      const stats = data.data.find(
+        (stat) =>
+          stat.origin_airport_city.includes(source) &&
+          stat.destination_airport_city.includes(destination)
+      );
+      setFlightStats(stats || null);
+    } catch (error) {
+      console.error("Error fetching flight statistics: ", error);
     }
   };
 
@@ -245,6 +274,77 @@ const SearchFlights = () => {
             Book Hotel
           </Button>
         </Box>
+
+        {flightStats ? (
+          <Card
+            elevation={2}
+            sx={{
+              mb: 3,
+              p: 0,
+              borderRadius: 2,
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <CardContent>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ fontWeight: "bold", mb: 1 }}
+              >
+                Flight Statistics
+              </Typography>
+              <Grid container spacing={0.5}>
+                {" "}
+                {/* Reduced spacing */}
+                <Grid item xs={6}>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography variant="body2" color="textSecondary">
+                      Total Flights:
+                    </Typography>
+                    <Typography variant="subtitle1" color="primary">
+                      {flightStats.total_flights}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography variant="body2" color="textSecondary">
+                      Median Fare:
+                    </Typography>
+                    <Typography variant="subtitle1" color="primary">
+                      ${flightStats.median_fare}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography variant="body2" color="textSecondary">
+                      Average Passengers:
+                    </Typography>
+                    <Typography variant="subtitle1" color="primary">
+                      {Math.round(flightStats.avg_passengers)}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <Typography variant="body2" color="textSecondary">
+                      Average Distance:
+                    </Typography>
+                    <Typography variant="subtitle1" color="primary">
+                      {Math.round(flightStats.avg_distance)} miles
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        ) : (
+          <Typography sx={{ mb: 3 }} color="textSecondary">
+            No matching flight statistics found.
+          </Typography>
+        )}
+
         <AppBar position="static" color="default">
           <Tabs
             value={tabIndex}
@@ -259,9 +359,6 @@ const SearchFlights = () => {
         </AppBar>
 
         <TabPanel value={tabIndex} index={0}>
-          <Typography sx={{ margin: "-10px auto 10px" }}>
-            Number of flights from {source} to {destination}: {totalFlights}
-          </Typography>
           <FlightTable
             flights={flights}
             rowsPerPage={rowsPerPage}
