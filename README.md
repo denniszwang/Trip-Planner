@@ -4,12 +4,6 @@
 
 ---
 
-## **Project Overview**
-
-Trip Planner enables users to easily create, view, and manage their travel plans. The application includes intuitive interfaces for finding flights, hotels, and exploring community-shared travel itineraries. The **frontend** is built with React for a responsive and engaging experience, while the **backend** utilizes Express.js and Node.js to provide a robust set of RESTful APIs to handle travel data.
-
----
-
 ## **Features**
 
 - **Sign In / Create Account**: Easily access your account or create a new one to start planning your trips.
@@ -34,16 +28,19 @@ Trip Planner enables users to easily create, view, and manage their travel plans
 
 The frontend consists of **four main pages**:
 
-1. **Home Page**  
+1. **Home Page**
+
    - Displays an overview of the app's features, allowing users to search for destinations and explore curated travel itineraries.
 
-2. **Flight Page**  
+2. **Flight Page**
+
    - Users can search for flights, compare options, and view popular routes. The page also provides insights into average fares to help find the best deals.
 
-3. **Hotel Page**  
+3. **Hotel Page**
+
    - Users can browse accommodations in their chosen destination, with details including maps, weather, hotel ratings, websites, and pricing to make informed decisions.
 
-4. **Plan Page**  
+4. **Plan Page**
    - Showcases community-shared travel plans, ranging from short luxury getaways to long-term extended adventures, offering inspiration for your next trip.
 
 ---

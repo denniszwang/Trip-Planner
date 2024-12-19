@@ -5,6 +5,7 @@ import Flight from "./pages/Flight";
 import Hotel from "./pages/Hotel";
 import Plan from "./pages/Plan";
 import Home from "./pages/Home";
+import dialog from "./components/EditFlightDialog";
 
 export default function App() {
   return (

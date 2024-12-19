@@ -63,11 +63,6 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    onClose();
-  };
-
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -122,7 +117,13 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
                       mb: 1,
                     }}
                   >
-                    <Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        width: "200px",
+                      }}
+                    >
                       {flight.origin_airport_city.split(",")[0]}{" "}
                       <FlightIcon
                         sx={{
@@ -133,6 +134,7 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
                       {flight.destination_airport_city.split(",")[0]}
                     </Box>
                     <Typography>${flight.fare.toFixed(2)}</Typography>
+                    <Button>Edit</Button>
                   </Box>
                 ))}
               </CardContent>
@@ -144,25 +146,34 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
                 </Typography>
                 {planDetails.hotels.map((hotel, index) => (
                   <Box key={index} sx={{ mb: 1 }}>
-                    <Typography variant="subtitle1">
-                      {hotel.hotel_name}
-                    </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      {renderStars(hotel.hotel_rating)}
-                    </Box>
-                    <Typography variant="body2">
-                      Address: {hotel.address}
-                    </Typography>
-                    <Typography variant="body2">
-                      Website:{" "}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Link
                         href={hotel.hotel_website_url}
                         target="_blank"
                         rel="noopener"
+                        variant="subtitle1"
+                        underline="hover"
+                        sx={{
+                          color: "text.primary",
+                          width: "200px",
+                          "&:hover": {
+                            color: "blue",
+                          },
+                        }}
                       >
-                        {hotel.hotel_website_url}
+                        {hotel.hotel_name}
                       </Link>
-                    </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {renderStars(hotel.hotel_rating)}
+                      </Box>
+                      <Button>Edit</Button>
+                    </Box>
                   </Box>
                 ))}
               </CardContent>
