@@ -12,6 +12,7 @@ import {
   Box,
   Link,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import FlightIcon from "@mui/icons-material/Flight";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
@@ -21,6 +22,7 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
   const [planDetails, setPlanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (open && planId) {
@@ -61,6 +63,19 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
     } catch (err) {
       setError("Error deleting plan");
     }
+  };
+
+  const handleEditFlightOpen = (flight) => {
+    const originCity = flight.origin_airport_city.split(",")[0];
+    const destinationCity = flight.destination_airport_city.split(",")[0];
+    localStorage.setItem("departureCity", originCity);
+    localStorage.setItem("destinationCity", destinationCity);
+    navigate(`/flight`);
+  };
+
+  const handleEditHotelOpen = (hotel) => {
+    localStorage.setItem("hotelName", hotel.hotel_name);
+    navigate(`/hotel`);
   };
 
   const renderStars = (rating) => {
@@ -134,7 +149,9 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
                       {flight.destination_airport_city.split(",")[0]}
                     </Box>
                     <Typography>${flight.fare.toFixed(2)}</Typography>
-                    <Button>Edit</Button>
+                    <Button onClick={() => handleEditFlightOpen(flight)}>
+                      Edit
+                    </Button>
                   </Box>
                 ))}
               </CardContent>
@@ -159,20 +176,16 @@ const PlanDialog = ({ open, onClose, planId, onDelete }) => {
                         rel="noopener"
                         variant="subtitle1"
                         underline="hover"
-                        sx={{
-                          color: "text.primary",
-                          width: "200px",
-                          "&:hover": {
-                            color: "blue",
-                          },
-                        }}
+                        sx={{ color: "text.primary", width: "200px" }}
                       >
                         {hotel.hotel_name}
                       </Link>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         {renderStars(hotel.hotel_rating)}
                       </Box>
-                      <Button>Edit</Button>
+                      <Button onClick={() => handleEditHotelOpen(hotel)}>
+                        Edit
+                      </Button>
                     </Box>
                   </Box>
                 ))}
